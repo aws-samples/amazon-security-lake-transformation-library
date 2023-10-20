@@ -16,7 +16,7 @@ The above illustration shows the interaction of services involved in building th
 
 **Overall event mapping**
 
-|Sysmon EventId	| Event Detail | Mapped OCSF Class |
+|Sysmon EventId	| Event Detail | OCSF Class |
 |-|-|-|
 | 1 | Process creation | Process Activity |
 | 2 | A process changed a file creation time | File System Activity |
@@ -69,7 +69,7 @@ The above illustration shows the interaction of services involved in building th
 
 2. Attribute mapping for File System Activity class
 
-    OCSF| Raw |
+    |OCSF| Raw |
     |-|-|
     | metadata.profiles| [host] |
     | metadata.version| v1.0.0-rc2 |
@@ -78,16 +78,15 @@ The above illustration shows the interaction of services involved in building th
     | metadata.product.version| v15.0 |
     | severity| Informational |
     | severity_id| 1 |
-    | OCSF| Raw |
     | category_uid| 1 |
     | category_name| System Activity |
     | class_uid| 1001 |
     | class_name| File System Activity |
-    | time| <UtcTime> |
+    | time| `<UtcTime>` |
     | activity_id| 1 |
-    | actor| {'process': {'name': <Image>}} |
+    | actor| {'process': {'name': `<Image>`}} |
     | device| {'type_id': 6} |
-    | unmapped| {‘pid’: <ProcessId>, ‘uid’: <ProcessGuid>,  'name': <Image>, 'user': <User>, rulename: <RuleName>} |
+    | unmapped| {'pid': `<ProcessId>`, 'uid': `<ProcessGuid>`,  'name': `<Image>`, 'user': `<User>`, 'rulename': `<RuleName>`} |
     | file| {'name': , 'type_id': '1'} |
     | type_uid| 100101 |
 
