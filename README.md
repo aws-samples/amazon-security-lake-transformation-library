@@ -10,7 +10,7 @@ Customers can configure custom sources to bring their own security data into Sec
 
 The OCSF project is a vendor-agnostic and open source standard that customers can use to address the complex and heterogeneous nature of security log collection and analysis. Customers can extend and adopt the OCSF [core security schema](https://schema.ocsf.io/) in a range of use cases in their IT environment, application, or solution while complementing their existing security standards and processes. As of this writing, the most recent version of the schema is v1.0.0, and it contains six [categories](https://schema.ocsf.io/1.0.0/categories?extensions=). These are System Activity, Findings, Identity and Access Management, Network Activity, Discovery, and Application Activity. Each category consists of different [classes](https://schema.ocsf.io/1.0.0/classes?extensions=) based on the type of activity, and each class has a unique class UID. For example, File System Activity has a class UID of 1001.
 
-![OCSF v1.0.0](/images/ocsf_v1_0.png)
+![OCSF v1.0.0](./images/ocsf_v1_0.png)
 
 ## Pre-requisites
 1. **[AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tutorials_basic.html) is configured your AWS environment**. AWS Organizations is an AWS account management service that provides account management and consolidated billing capabilities so you can consolidate multiple AWS accounts and manage them centrally.
