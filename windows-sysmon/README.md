@@ -93,6 +93,7 @@ The above illustration shows the interaction of services involved in building th
 ## Pre-requisites
 
 1. **[AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tutorials_basic.html) is configured your AWS environment**. AWS Organizations is an AWS account management service that provides account management and consolidated billing capabilities so you can consolidate multiple AWS accounts and manage them centrally.
+
 2. Security Lake is activated and [delegated administrator is configured](https://docs.aws.amazon.com/security-lake/latest/userguide/multi-account-management.html).
 
     1. Navigate to the AWS Organizations console, and set up an organization with a [Log Archive account](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/log-archive.html). The Log Archive account should be used as the delegated Security Lake administrator account where you will configure Security Lake. For more information on deploying the full complement of AWS security services in a multi-account environment, see [AWS Prescriptive Guidance | AWS Security Reference Architecture](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html).
@@ -100,3 +101,29 @@ The above illustration shows the interaction of services involved in building th
     3. Enable Security Lake in the Region of your choice in the Log Archive account. When you configure Security Lake, you can define your collection objectives, which include log sources, the Regions that you want to collect the log sources from and the lifecycle policy you want to assign to the log sources. Security Lake uses [Amazon Simple Storage Service (Amazon S3)](https://aws.amazon.com/s3/) as the underlying storage for the log data. S3 is an object storage service offering industry-leading scalability, data availability, security, and performance. S3 is built to store and retrieve any amount of data from anywhere. Security Lake creates and configures individual S3 buckets in each Region identified in the collection objectives, in the Log Archive account.
 
 3. Install [Kinesis Agent for Microsoft Windows](https://docs.aws.amazon.com/kinesis-agent-windows/latest/userguide/getting-started.html#getting-started-installation). There are three ways you can install the agent on Windows Operating Systems. Using [AWS Systems Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/), helps automate the deployment and upgrade process. You can also install using a Windows installer package or using PowerShell scripts.
+
+## Deployment
+
+1. Sign in to the Amazon Security Lake delegated administrator account.
+
+2. Deploy the lambda function in the `lambda` folder. ##### TODO SAM-ify
+
+2. Navigate to AWS CloudFormation and deploy the streaming infrastructure using the CloudFormation template titled `LogIngestionInfrastructure.yaml`.
+
+3. Capture the outputs of the CloudFormation stack on a scratchpad.
+
+4. In the following command, replace the placeholders as below:
+    * `<GLUE_IAM_ROLE_ARN>` with the value of the CloudFormation output named `WindowsSysmonGlueRoleARN` captured in the previous step.
+    * `<EXTERNAL_ID>` is an alphanumeric value you can assign to configure fine grained access control. For the windows-sysmon custom source, you can assign it any value you like. In some cases, where you are using an external product, the vendor will supply the [External ID](https://aws.amazon.com/blogs/security/how-to-use-external-id-when-granting-access-to-your-aws-resources/) to you.
+    * `<AWS_IDENTITY_PRINCIPAL>` with the Security Lake delegated administrator AWS Account ID.
+    * `<SECURITY_LAKE_REGION>` with the region where Security Lake is configured.
+
+    ```bash
+        aws securitylake create-custom-log-source  \
+            --source-name windows-sysmon \
+            --configuration crawlerConfiguration={"roleArn=<GLUE_IAM_ROLE_ARN>"},providerIdentity={"externalId=<EXTERNAL_ID>,principal=<AWS_IDENTITY_PRINCIPAL>"} \
+            --event-classes FILE_ACTIVITY PROCESS_ACTIVITY \
+            --region <SECURITY_LAKE_REGION>
+    ```
+
+2. Use AWS CloudShell, a browser based shell, in the Security Lake delegated administrator account to run the above command after you have replaced the placeholders.

@@ -40,7 +40,7 @@ Resources:
               - Sid: S3WriteRead
                 Effect: Allow
                 Action:
-                  - "s3:GetObject",
+                  - "s3:GetObject"
                   - "s3:PutObject"
                 Resource: "arn:aws:s3:::aws-security-data-lake-*/*"
       AssumeRolePolicyDocument:
