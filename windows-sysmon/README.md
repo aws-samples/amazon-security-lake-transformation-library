@@ -108,11 +108,14 @@ The above illustration shows the interaction of services involved in building th
 
 2. Deploy the lambda function in the `lambda` folder. ##### TODO SAM-ify
 
-2. Navigate to AWS CloudFormation and deploy the streaming infrastructure using the CloudFormation template titled `LogIngestionInfrastructure.yaml`.
+3. Navigate to AWS CloudFormation and deploy the streaming infrastructure using the CloudFormation template titled `LogIngestionInfrastructure.yaml`. The CloudFormation template produces three outputs:
 
-3. Capture the outputs of the CloudFormation stack on a scratchpad.
+    1. `CustomSourceKDFStreamName`: Name of the Amazon Kinesis Data Firehose delivery stream.2. `KinesisMonitoringPutRecordAlarm`: Name of the Amazon CloudWatch alarm that monitors healthy Kinesis operation.
+    3. `WindowsSysmonGlueRoleARN`: Name of the IAM role created for Glue to use with custom sources.
 
-4. In the following command, replace the placeholders as below:
+4. Capture the outputs of the CloudFormation stack on a scratchpad.
+
+5. In the following command, replace the placeholders as below:
     * `<GLUE_IAM_ROLE_ARN>` with the value of the CloudFormation output named `WindowsSysmonGlueRoleARN` captured in the previous step.
     * `<EXTERNAL_ID>` is an alphanumeric value you can assign to configure fine grained access control. For the windows-sysmon custom source, you can assign it any value you like. In some cases, where you are using an external product, the vendor will supply the [External ID](https://aws.amazon.com/blogs/security/how-to-use-external-id-when-granting-access-to-your-aws-resources/) to you.
     * `<AWS_IDENTITY_PRINCIPAL>` with the Security Lake delegated administrator AWS Account ID.
@@ -126,4 +129,39 @@ The above illustration shows the interaction of services involved in building th
             --region <SECURITY_LAKE_REGION>
     ```
 
-2. Use AWS CloudShell, a browser based shell, in the Security Lake delegated administrator account to run the above command after you have replaced the placeholders.
+6. Use AWS CloudShell, a browser based shell, in the Security Lake delegated administrator account to run the above command after you have replaced the placeholders.
+
+7. Access the remote host running Microsoft Windows Operating System. This solution uses `[sysmonconfig.xml](https://github.com/olafhartong/sysmon-modular/blob/master/sysmonconfig.xml)` published in the [sysmon-modular](https://github.com/olafhartong/sysmon-modular) project. The project provides a modular configuration along with publishing Tactics, Techniques and Procedures (TTPs) with sysmon events to help in [TTP-based threat hunting](https://www.mitre.org/news-insights/publication/ttp-based-hunting) use cases. If you have your own curated sysmon configuration, you can also choose to use your own configuration.
+
+8. On the remote host, update the Kinesis agent configuration file contents with the contents of `kinesis_agent_configuration.json` file from this repository. Make sure you replace `<CustomSourceKDFStreamName>` placeholder with the value of the CloudFormation output `CustomSourceKDFStreamName` from Step 3.
+
+    ```json
+    {
+        "Sources": [
+            {
+            "Id": "Sysmon",
+            "SourceType": "WindowsEventLogSource",
+            "LogName": "Microsoft-Windows-Sysmon/Operational"
+            }
+        ],
+        "Sinks": [
+            {
+            "Id": "SysmonLogStream",
+            "SinkType": "KinesisFirehose",
+            "StreamName": "<CustomSourceKDFStreamName>",
+            "Region": "{env:Region}",
+            "ObjectDecoration": "source_instance_id={ec2:instance-id};",
+            "Format": "json"
+            }
+        ],
+        "Pipes": [
+            {
+            "Id": "JsonLogSourceToFirehoseLogStream",
+            "SourceRef": "Sysmon",
+            "SinkRef": "SysmonLogStream"
+            }
+        ],
+        "SelfUpdate": 0,
+        "Telemetrics": { "off": "true" }
+    }
+    ```
