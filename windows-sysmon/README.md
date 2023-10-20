@@ -110,12 +110,14 @@ The above illustration shows the interaction of services involved in building th
 
 3. Navigate to AWS CloudFormation and deploy the streaming infrastructure using the CloudFormation template titled `LogIngestionInfrastructure.yaml`. The CloudFormation template produces three outputs:
 
-    1. `CustomSourceKDFStreamName`: Name of the Amazon Kinesis Data Firehose delivery stream.2. `KinesisMonitoringPutRecordAlarm`: Name of the Amazon CloudWatch alarm that monitors healthy Kinesis operation.
-    3. `WindowsSysmonGlueRoleARN`: Name of the IAM role created for Glue to use with custom sources.
+    * `CustomSourceKDFStreamName`: Name of the Amazon Kinesis Data Firehose delivery stream
+    * `KinesisMonitoringPutRecordAlarm`: Name of the Amazon CloudWatch alarm that monitors healthy Kinesis operation.
+    * `WindowsSysmonGlueRoleARN`: Name of the IAM role created for Glue to use with custom sources.
 
 4. Capture the outputs of the CloudFormation stack on a scratchpad.
 
 5. In the following command, replace the placeholders as below:
+
     * `<GLUE_IAM_ROLE_ARN>` with the value of the CloudFormation output named `WindowsSysmonGlueRoleARN` captured in the previous step.
     * `<EXTERNAL_ID>` is an alphanumeric value you can assign to configure fine grained access control. For the windows-sysmon custom source, you can assign it any value you like. In some cases, where you are using an external product, the vendor will supply the [External ID](https://aws.amazon.com/blogs/security/how-to-use-external-id-when-granting-access-to-your-aws-resources/) to you.
     * `<AWS_IDENTITY_PRINCIPAL>` with the Security Lake delegated administrator AWS Account ID.
