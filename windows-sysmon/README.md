@@ -15,8 +15,9 @@ The above illustration shows the interaction of services involved in building th
 ## Mapping
 
 **Overall event mapping**
+
+|Sysmon EventId	| Event Detail | Mapped OCSF Class |
 |-|-|-|
-|Sysmon EventId	| Event Detail | Mapped OCSF Class | 
 | 1 | Process creation | Process Activity |
 | 2 | A process changed a file creation time | File System Activity |
 | 3 | Network connection | Network Activity |
@@ -67,8 +68,9 @@ The above illustration shows the interaction of services involved in building th
     ```
 
 2. Attribute mapping for File System Activity class
-    |-|-|
+
     OCSF| Raw |
+    |-|-|
     | metadata.profiles| [host] |
     | metadata.version| v1.0.0-rc2 |
     | metadata.product.name| System Monitor (Sysmon) |
