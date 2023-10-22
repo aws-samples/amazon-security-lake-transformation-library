@@ -119,9 +119,9 @@ The above illustration shows the interaction of services involved in building th
 5. In the following command, replace the placeholders as below:
 
     * `<GLUE_IAM_ROLE_ARN>` with the value of the CloudFormation output named `WindowsSysmonGlueRoleARN` captured in the previous step.
-    * `<EXTERNAL_ID>` is an alphanumeric value you can assign to configure fine grained access control. For the windows-sysmon custom source, you can assign it any value you like. In some cases, where you are using an external product, the vendor will supply the [External ID](https://aws.amazon.com/blogs/security/how-to-use-external-id-when-granting-access-to-your-aws-resources/) to you. 
+    * `<EXTERNAL_ID>` is an alphanumeric value you can assign to configure fine grained access control. For the `windows-sysmon` custom source, you can assign it any value you like. In some cases, where you are using an external product, the vendor will supply the [External ID](https://aws.amazon.com/blogs/security/how-to-use-external-id-when-granting-access-to-your-aws-resources/) to you. 
     
-    > **_NOTE:_**  For records pertaining to accounts outside of AWS, we recommend using a string such as "external" or "external_<externalAccountId>". Partners should take care to avoid ambiguity in naming external account IDs so that they do not conflict with AWS account IDs or external account IDs maintained by other identity management systems, as queries across Amazon Security Lake tables may simultaneously cover data across multiple identity management systems.
+    > **_NOTE:_**  For records pertaining to accounts outside of AWS, we recommend using a string such as *_`external`_* or *_`external_<externalAccountId>`_*. Partners should take care to avoid ambiguity in naming external account IDs so that they do not conflict with AWS account IDs or external account IDs maintained by other identity management systems, as queries across Amazon Security Lake tables may simultaneously cover data across multiple identity management systems.
 
     * `<AWS_IDENTITY_PRINCIPAL>` with the Security Lake delegated administrator AWS Account ID.
     * `<SECURITY_LAKE_REGION>` with the region where Security Lake is configured.
