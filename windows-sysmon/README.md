@@ -111,21 +111,24 @@ The above illustration shows the interaction of services involved in building th
 3. Navigate to AWS CloudFormation and deploy the streaming infrastructure using the CloudFormation template titled `LogIngestionInfrastructure.yaml`.
     
     The CloudFormation template requires the below inputs:
-        * `SourceKinesisUserARNs`: This is the list of AWS Principals that are associated with the on-premises servers and EC2 instances that use the Kinesis Agent for Microsoft Windows to stream logs to the Kinesis Data Firehose for log delivery to Security Lake S3 buckets. 
-        * `CustomSourceName`: Name of the custom source you will add with Security Lake.
-        * `LogCollectionS3BucketARN`: ARN of the Security Lake S3 bucket where the log data will be delivered to.
-        * `OCSFConversionLambdaFunctionARN`: ARN of the Lambda function deployed in the previous step for OCSF conversion.
-        * `S3LogDeliveryPrefix`: Log delivery prefix for the custom source. This parameter should start with `ext/` and include the custom source name. For example, `ext/<custom_source_name>`.
+
+    * `SourceKinesisUserARNs`: This is the list of AWS Principals that are associated with the on-premises servers and EC2 instances that use the Kinesis Agent for Microsoft Windows to stream logs to the Kinesis Data Firehose for log delivery to Security Lake S3 buckets. 
+    * `CustomSourceName`: Name of the custom source you will add with Security Lake.
+    * `LogCollectionS3BucketARN`: ARN of the Security Lake S3 bucket where the log data will be delivered to.
+    * `OCSFConversionLambdaFunctionARN`: ARN of the Lambda function deployed in the previous step for OCSF conversion.
+    * `S3LogDeliveryPrefix`: Log delivery prefix for the custom source. This parameter should start with `ext/` and include the custom source name. For example, `ext/<custom_source_name>`.
 
     The CloudFormation template produces the following outputs:
-        * `CustomSourceKDFStreamName`: Name of the Amazon Kinesis Data Firehose delivery stream
-        * `KinesisMonitoringPutRecordAlarm`: Name of the Amazon CloudWatch alarm that monitors healthy Kinesis operation.
-        * `WindowsSysmonGlueRoleARN`: Name of the IAM role created for Glue to use with custom sources.
-        * `KinesisAgentIAMRoleARN`: ARN of the IAM role created for Kinesis agent to assume for log streaming.
+
+    * `CustomSourceKDFStreamName`: Name of the Amazon Kinesis Data Firehose delivery stream
+    * `KinesisMonitoringPutRecordAlarm`: Name of the Amazon CloudWatch alarm that monitors healthy Kinesis operation.
+    * `WindowsSysmonGlueRoleARN`: Name of the IAM role created for Glue to use with custom sources.
+    * `KinesisAgentIAMRoleARN`: ARN of the IAM role created for Kinesis agent to assume for log streaming.
 
 4. Capture the outputs of the CloudFormation stack on a scratchpad.
 
 5. In the following command, replace the placeholders as below:
+
     * `<AWS_IDENTITY_PRINCIPAL>` with the Security Lake delegated administrator AWS Account ID.
     * `<SECURITY_LAKE_REGION>` with the region where Security Lake is configured.
     * `<GLUE_IAM_ROLE_ARN>` with the value of the CloudFormation output named `WindowsSysmonGlueRoleARN` captured in the previous step.
@@ -178,12 +181,13 @@ The above illustration shows the interaction of services involved in building th
         * On the **Set output and scheduling** page, select the **Target database** as the Security Lake Glue database.
         * In a separate tab, navigate to AWS Glue > Tables. Copy the name of the custom source table created by Security Lake.
         * Navigate back to the Glue crawler configuration tab, update the **Table name prefix** with the copied table name and add an underscore (`_`) at the end. For example, `amazon_security_lake_table_ap_southeast_2_ext_windows_sysmon_`.
-        * Under **Advanced options**, select the checkbox for **Create a single schema for each S3 path** and for **Table level** type in `4`. For the **Crawler schedule**, select the **Frequency** as **Hourly**. For **Minute**, type in 0. This configuration will run the crawler every hour.
+        * Under **Advanced options**, select the checkbox for **Create a single schema for each S3 path** and for **Table level** type in `4`.
 
         ![Update Crawler Output And Scheduling](./images/edit_crawler_output_scheduling.png)
 
         > **_Note_** The **Table level** is the location of the path that Glue will evaluate to create separate schemas. This level is calculated from the S3 bucket root not from the relative location of the data source added earlier. The OCSF transformation lambda function will filter events based on schemas defined in the mapping configurations.
 
+        * For the **Crawler schedule** section, select **Hourly** from the **Frequency** dropdown. For **Minute**, type in 0. This configuration will run the crawler every hour.
         * Select **Next**, then **Update**.
     
     5. You can choose to let the crawler run on a schedule or manually trigger the crawler once the ETL has been deployed and log streaming is configured.
