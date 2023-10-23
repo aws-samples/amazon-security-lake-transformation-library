@@ -4,6 +4,9 @@ Description: >-
   The template requires the OCSF conversion Lambda function ARN and custom source details like Security Lake S3 bucket details and log delivery prefix.
   The template also sets up an Amazon CloudWatch Alarm to alert when Kinesis Data Firehose stream's log delivery rate falls below 95%.
 Parameters:
+  SourceKinesisUserARNs:
+    Type: List<String>
+    Description: ARNs of IAM entities associated with servers and EC2 instances running the Kinesis Agent for log streaming.
   CustomSourceName:
     Type: String
     Description: Name of the custom source created in Security Lake.
@@ -28,7 +31,7 @@ Resources:
   WindowsSysmonGlueRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "WindowsSysmonGlueRole"
+      RoleName: WindowsSysmonGlueRole
       Path: "/service-role/"
       ManagedPolicyArns:
       - "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
@@ -85,8 +88,8 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'lambda:InvokeFunction'
-                  - 'lambda:GetFunctionConfiguration'
+                  - lambda:InvokeFunction
+                  - lambda:GetFunctionConfiguration
                 Resource: 
                   - !Join ['', [ !Ref OCSFConversionLambdaFunctionARN, '*'] ]
 
@@ -105,9 +108,7 @@ Resources:
           SizeInMBs: !Ref BufferingSize
         ErrorOutputPrefix: !Join [ '', [ !Ref S3LogDeliveryPrefix, "error/!{firehose:error-output-type}/dt=!{timestamp:yyyy'-'MM'-'dd}/h=!{timestamp:HH}/"] ]
         Prefix: !Ref S3LogDeliveryPrefix
-        RoleARN: !GetAtt 
-          - KDFCustomSourceIAMRole
-          - Arn
+        RoleARN: !GetAtt KDFCustomSourceIAMRole.Arn
         ProcessingConfiguration:
           Enabled: true
           Processors:
@@ -132,7 +133,36 @@ Resources:
       Threshold: 0.95
       TreatMissingData: notBreaching
 
+  KinesisAgentIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: KinesisAgentIAMRole
+      Policies:
+      - PolicyName: KinesisAgentIAMPolicy
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+              - Sid: KinesisWrite
+                Effect: Allow
+                Action:
+                  - kinesis:PutRecord
+                  - kinesis:PutRecords
+                Resource: !GetAtt KDFCustomSourceDeliveryStream.Arn
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Ref SourceKinesisUserARNs
+            Action:
+              - sts:AssumeRole
+
 Outputs:
+
+  KinesisAgentIAMRoleARN:
+    Description: ARN of the IAM role created for Kinesis agent to assume for log streaming.
+    Value: !GetAtt KinesisAgentIAMRole.Arn
+
   WindowsSysmonGlueRoleARN:
     Description: Name of the IAM role created for Glue to use with custom sources.
     Value: !GetAtt WindowsSysmonGlueRole.Arn

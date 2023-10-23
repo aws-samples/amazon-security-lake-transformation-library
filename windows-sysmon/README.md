@@ -108,37 +108,91 @@ The above illustration shows the interaction of services involved in building th
 
 2. Deploy the lambda function in the `lambda` folder. ##### TODO SAM-ify
 
-3. Navigate to AWS CloudFormation and deploy the streaming infrastructure using the CloudFormation template titled `LogIngestionInfrastructure.yaml`. The CloudFormation template produces three outputs:
+3. Navigate to AWS CloudFormation and deploy the streaming infrastructure using the CloudFormation template titled `LogIngestionInfrastructure.yaml`.
+    
+    The CloudFormation template requires the below inputs:
+        * `SourceKinesisUserARNs`: This is the list of AWS Principals that are associated with the on-premises servers and EC2 instances that use the Kinesis Agent for Microsoft Windows to stream logs to the Kinesis Data Firehose for log delivery to Security Lake S3 buckets. 
+        * `CustomSourceName`: Name of the custom source you will add with Security Lake.
+        * `LogCollectionS3BucketARN`: ARN of the Security Lake S3 bucket where the log data will be delivered to.
+        * `OCSFConversionLambdaFunctionARN`: ARN of the Lambda function deployed in the previous step for OCSF conversion.
+        * `S3LogDeliveryPrefix`: Log delivery prefix for the custom source. This parameter should start with `ext/` and include the custom source name. For example, `ext/<custom_source_name>`.
 
-    * `CustomSourceKDFStreamName`: Name of the Amazon Kinesis Data Firehose delivery stream
-    * `KinesisMonitoringPutRecordAlarm`: Name of the Amazon CloudWatch alarm that monitors healthy Kinesis operation.
-    * `WindowsSysmonGlueRoleARN`: Name of the IAM role created for Glue to use with custom sources.
+    The CloudFormation template produces the following outputs:
+        * `CustomSourceKDFStreamName`: Name of the Amazon Kinesis Data Firehose delivery stream
+        * `KinesisMonitoringPutRecordAlarm`: Name of the Amazon CloudWatch alarm that monitors healthy Kinesis operation.
+        * `WindowsSysmonGlueRoleARN`: Name of the IAM role created for Glue to use with custom sources.
+        * `KinesisAgentIAMRoleARN`: ARN of the IAM role created for Kinesis agent to assume for log streaming.
 
 4. Capture the outputs of the CloudFormation stack on a scratchpad.
 
 5. In the following command, replace the placeholders as below:
-
+    * `<AWS_IDENTITY_PRINCIPAL>` with the Security Lake delegated administrator AWS Account ID.
+    * `<SECURITY_LAKE_REGION>` with the region where Security Lake is configured.
     * `<GLUE_IAM_ROLE_ARN>` with the value of the CloudFormation output named `WindowsSysmonGlueRoleARN` captured in the previous step.
     * `<EXTERNAL_ID>` is an alphanumeric value you can assign to configure fine grained access control. For the `windows-sysmon` custom source, you can assign it any value you like. In some cases, where you are using an external product, the vendor will supply the [External ID](https://aws.amazon.com/blogs/security/how-to-use-external-id-when-granting-access-to-your-aws-resources/) to you. 
     
     > **_NOTE:_**  For records pertaining to accounts outside of AWS, we recommend using a string such as *_`external`_* or *_`external_<externalAccountId>`_*. Partners should take care to avoid ambiguity in naming external account IDs so that they do not conflict with AWS account IDs or external account IDs maintained by other identity management systems, as queries across Amazon Security Lake tables may simultaneously cover data across multiple identity management systems.
 
-    * `<AWS_IDENTITY_PRINCIPAL>` with the Security Lake delegated administrator AWS Account ID.
-    * `<SECURITY_LAKE_REGION>` with the region where Security Lake is configured.
-
     ```bash
-        aws securitylake create-custom-log-source  \
-            --source-name windows-sysmon \
-            --configuration crawlerConfiguration={"roleArn=<GLUE_IAM_ROLE_ARN>"},providerIdentity={"externalId=<EXTERNAL_ID>,principal=<AWS_IDENTITY_PRINCIPAL>"} \
-            --event-classes FILE_ACTIVITY PROCESS_ACTIVITY \
-            --region <SECURITY_LAKE_REGION>
+    aws securitylake create-custom-log-source  \
+        --source-name windows-sysmon \
+        --configuration crawlerConfiguration={"roleArn=<GLUE_IAM_ROLE_ARN>"},providerIdentity={"externalId=<EXTERNAL_ID>,principal=<AWS_IDENTITY_PRINCIPAL>"} \
+        --event-classes FILE_ACTIVITY PROCESS_ACTIVITY \
+        --region <SECURITY_LAKE_REGION>
     ```
 
-6. Use AWS CloudShell, a browser based shell, in the Security Lake delegated administrator account to run the above command after you have replaced the placeholders.
+6. Use AWS CloudShell, a browser based shell, in the Security Lake delegated administrator account to run the above command after you have replaced the placeholders. The output of the command will reveal the attributes of associate Glue resource along with Security Lake S3 bucket location and the associated IAM role ARN. See example output below:
 
-7. Access the remote host running Microsoft Windows Operating System. This solution uses [sysmonconfig.xml](https://github.com/olafhartong/sysmon-modular/blob/master/sysmonconfig.xml) published in the [sysmon-modular](https://github.com/olafhartong/sysmon-modular) project. The project provides a modular configuration along with publishing Tactics, Techniques and Procedures (TTPs) with sysmon events to help in [TTP-based threat hunting](https://www.mitre.org/news-insights/publication/ttp-based-hunting) use cases. If you have your own curated sysmon configuration, you can also choose to use your own configuration.
+    ```json
+    {
+        "source": {
+            "attributes": {
+                "crawlerArn": "arn:aws:glue:region:XXX:crawler/windows-sysmon",
+                "databaseArn": "arn:aws:glue:region:XXX:database/amazon_security_lake_glue_db_region",
+                "tableArn": "arn:aws:glue:region:XXX:table/amazon_security_lake_table_region_ext_windows_sysmon"
+            },
+            "provider": {
+                "location": "s3://aws-security-data-lake-region-exampleid/ext/windows-sysmon/",
+                "roleArn": "arn:aws:iam::XXX:role/AmazonSecurityLake-Provider-windowssysmon-region"
+            },
+            "sourceName": "windows-sysmon"
+        }
+    }
+    ```
 
-8. On the remote host, update the Kinesis agent configuration file contents with the contents of `kinesis_agent_configuration.json` file from this repository. Make sure you replace `<CustomSourceKDFStreamName>` placeholder with the value of the CloudFormation output `CustomSourceKDFStreamName` from Step 3.
+7. In its default configuration, the Glue crawler created for the custom source does not address complex use cases where a single log source has events mapped to multiple OCSF classes. You will need to change the Crawler configuration for such configurations.
+
+    1. In the Security Lake delegated administrator account, navigate to the [AWS Glue service console](https://console.aws.amazon.com/glue/home).
+    2. Navigate to **Crawlers** in the **Data Catalog** section. Search for the crawler associated with the custom source. It will have the same name as the custom source name. For example, `windows-sysmon`. Select the check box next to the crawler name, then select **Edit Crawler** from the **Action** dropbox.
+
+    ![Edit Custom Source Glue Crawler](./images/edit_crawler.png)
+
+    3. Select **Edit** for the **Step 2: Choose data sources and classifiers** section on the **Review and update** page.
+    4. In the **Choose data sources and classifiers** section, make the following changes:
+        * For **Is your data already mapped to Glue tables?**, change the selection to **Not yet**.
+        * for **Data sources**, select **Add a data source**. In the selection prompt, select the Security Lake S3 bucket location as presented in the output of the `create-custom-source` command above. For example, `s3://aws-security-data-lake-region-exampleid/ext/windows-sysmon/`. Make sure you include the path all the way to the custom source name. Then click **Add S3 data source**.
+
+        ![Add S3 Data Source for Glue Crawler](./images/edit_crawler_data_source.png)
+        * Select **Next**.
+        * On the **Configure security settings** page, leave everything as is, select **Next**.
+        * On the **Set output and scheduling** page, select the **Target database** as the Security Lake Glue database.
+        * In a separate tab, navigate to AWS Glue > Tables. Copy the name of the custom source table created by Security Lake.
+        * Navigate back to the Glue crawler configuration tab, update the **Table name prefix** with the copied table name and add an underscore (`_`) at the end. For example, `amazon_security_lake_table_ap_southeast_2_ext_windows_sysmon_`.
+        * Under **Advanced options**, select the checkbox for **Create a single schema for each S3 path** and for **Table level** type in `4`. For the **Crawler schedule**, select the **Frequency** as **Hourly**. For **Minute**, type in 0. This configuration will run the crawler every hour.
+
+        ![Update Crawler Output And Scheduling](./images/edit_crawler_output_scheduling.png)
+
+        > **_Note_** The **Table level** is the location of the path that Glue will evaluate to create separate schemas. This level is calculated from the S3 bucket root not from the relative location of the data source added earlier. The OCSF transformation lambda function will filter events based on schemas defined in the mapping configurations.
+
+        * Select **Next**, then **Update**.
+    
+    5. You can choose to let the crawler run on a schedule or manually trigger the crawler once the ETL has been deployed and log streaming is configured.
+
+8. Access the remote host running Microsoft Windows Operating System. This solution uses [sysmonconfig.xml](https://github.com/olafhartong/sysmon-modular/blob/master/sysmonconfig.xml) published in the [sysmon-modular](https://github.com/olafhartong/sysmon-modular) project. The project provides a modular configuration along with publishing Tactics, Techniques and Procedures (TTPs) with sysmon events to help in [TTP-based threat hunting](https://www.mitre.org/news-insights/publication/ttp-based-hunting) use cases. If you have your own curated sysmon configuration, you can also choose to use your own configuration.
+
+9. On the remote host, update the Kinesis agent configuration file contents with the contents of `kinesis_agent_configuration.json` file from this repository. Make sure you replace `<CustomSourceKDFStreamName>` placeholder with the value of the CloudFormation output `CustomSourceKDFStreamName` and `<KinesisAgentIAMRoleARN>` placeholder with the value of the CloudFormation output `KinesisAgentIAMRoleARN` from Step 3.
+
+    > **_Note_**: For on-premises servers running the agent, please replace `{ec2:instance-id}` in the _ObjectDecoration_ value under _Sinks_ configuration with the server identifier. For more information, see [Configuring Amazon Kinesis Agent for Microsoft Windows](https://docs.aws.amazon.com/kinesis-agent-windows/latest/userguide/configuring-kinesis-agent-windows.html).
 
     ```json
     {
@@ -154,9 +208,9 @@ The above illustration shows the interaction of services involved in building th
             "Id": "SysmonLogStream",
             "SinkType": "KinesisFirehose",
             "StreamName": "<CustomSourceKDFStreamName>",
-            "Region": "{env:Region}",
             "ObjectDecoration": "source_instance_id={ec2:instance-id};",
-            "Format": "json"
+            "Format": "json",
+            "RoleARN": "<KinesisAgentIAMRoleARN>"
             }
         ],
         "Pipes": [

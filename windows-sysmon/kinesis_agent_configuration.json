@@ -11,9 +11,9 @@
       "Id": "SysmonLogStream",
       "SinkType": "KinesisFirehose",
       "StreamName": "<CustomSourceKDFStreamName>",
-      "Region": "{env:Region}",
       "ObjectDecoration": "source_instance_id={ec2:instance-id};",
-      "Format": "json"
+      "Format": "json",
+      "RoleARN": "<KinesisAgentIAMRoleARN>"
     }
   ],
   "Pipes": [
