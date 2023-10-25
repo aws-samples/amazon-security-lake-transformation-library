@@ -109,7 +109,7 @@ The solution deployment is a 4 step process.
 #### Step 1: Deploy log streaming and transformation infrastructure
 1. Sign in to the Amazon Security Lake delegated administrator account.
 
-2. Navigate to the [`sysmon_ocsf_tranform_sam` folder](./sysmon_ocsf_transform_sam/) in this project. Follow the instructions in the README to deploy the log streaming infrastructure and transformation infrastructure. The infrastructure is deployed using the [AWS Serverless Application Model (AWS SAM)](https://aws.amazon.com/serverless/sam/) which is an open-source framework for building serverless applications.
+2. Navigate to the [`sysmon_ocsf_transform_sam` folder](./sysmon_ocsf_transform_sam/) in this project. Follow the instructions in the README to deploy the log streaming infrastructure and transformation infrastructure. The infrastructure is deployed using the [AWS Serverless Application Model (AWS SAM)](https://aws.amazon.com/serverless/sam/) which is an open-source framework for building serverless applications.
 
 3. Capture the outputs of the deployment for use in the next step.
 
