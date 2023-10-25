@@ -291,9 +291,9 @@ def lambda_handler(event, context):
 
     transformed_records = {}
     
-    for record in event['records']:
-        print(record['recordId'])
-        payload = base64.b64decode(record['data']).decode('utf-8')
+    for record in event['Records']:
+        print(record['eventID'])
+        payload = base64.b64decode(record['kinesis']['data']).decode('utf-8')
         print("Raw Sysmon event: "+str(payload))
         payload_json = json.loads(payload)
         data = {}
@@ -316,7 +316,7 @@ def lambda_handler(event, context):
             print("Transformed OCSF record: "+str(new_schema))
                 
             output_record = {
-                'recordId': record['recordId'],
+                'recordId': record['eventID'],
                 'result': 'Ok',
                 'data': base64.b64encode(str(new_schema['target_mapping']).encode('utf-8')).decode('utf-8')
             }
@@ -328,9 +328,9 @@ def lambda_handler(event, context):
             print("Dropped record - no mapping for event")
         
             output_record = {
-                    'recordId': record['recordId'],
-                    'result': 'Dropped',
-                    'data': ''
+                    'recordId': record['eventID'],
+                    'result': 'No mapping for event',
+                    'data': payload_json
                 }
             output.append(output_record)
     
@@ -351,6 +351,6 @@ def lambda_handler(event, context):
             )
             print("Successfully wrote to: "+s3_url)
 
-    print('Successfully processed {} records.'.format(len(event['records'])))
+    print('Successfully processed {} records.'.format(len(event['Records'])))
 
     return {'records': output}

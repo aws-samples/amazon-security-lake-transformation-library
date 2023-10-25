@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  amazon-security-lake-transformation-lambda
+
+  Sample SAM Template for amazon-security-lake-transformation-lambda
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 15
+    MemorySize: 128
+
+Resources:
+  LambdaFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: lambda/
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      Tracing: Active
+      Policies:
+        - AWSLambdaExecute # Managed Policy
+        - Version: '2012-10-17' # Policy Document
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:*
+              Resource: !Sub 'arn:aws:s3:::${SecLakeCustomLogSourceLocation}*'
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:336392948345:layer:AWSSDKPandas-Python310:5'
+      Environment:
+        Variables:
+          SEC_LAKE_BUCKET:
+            Ref: SecLakeCustomLogSourceLocation
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt stream.Arn
+            BatchSize: 100
+            StartingPosition: LATEST
+  stream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: sysmon-ocsf-stream
+      ShardCount: 1
+
+Parameters:
+  SecLakeCustomLogSourceLocation:
+    Type: String
+    Description: Enter bucket name and location (with trailing slash) of where to deliver custom log source files (eg. my_bucket/ext/my_custom_source/)
+
+Outputs:
+  FunctionName:
+    Description: "Function name"
+    Value: !Ref LambdaFunction
+  StreamARN:
+    Description: "Stream ARN"
+    Value: !GetAtt stream.Arn
