@@ -6,16 +6,15 @@ import datetime
 import pandas as pd
 import awswrangler as wr
 
+# Consider overrides for account_id and region
+SEC_LAKE_BUCKET = os.environ['SEC_LAKE_BUCKET']
+
 print('Loading function')
 payload_json = {}
 
 # Get config for mapping
 f = open('sysmon_mapping.json')
 sysmon_mapping = json.load(f)
-
-# Consider overrides for account_id and region
-
-SEC_LAKE_BUCKET = os.environ['SEC_LAKE_BUCKET']
 
 def perform_transform(event_mapping, sysmon_event):
     
@@ -80,7 +79,7 @@ def lambda_handler(event, context):
         print("Raw Sysmon event: "+str(payload))
         payload_json = json.loads(payload)
         payload_json['EventId'] = str(payload_json['EventId'])
-        
+
         data = {}
         for line in payload_json['Description'].split('\r\n'):
             parts = line.split(': ', 1)  # Splitting by ': '
