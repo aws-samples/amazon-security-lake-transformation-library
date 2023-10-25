@@ -7,232 +7,15 @@ import pandas as pd
 import awswrangler as wr
 
 print('Loading function')
+payload_json = {}
+
+# Get config for mapping
+f = open('sysmon_mapping.json')
+sysmon_mapping = json.load(f)
 
 # Consider overrides for account_id and region
 
-payload_json = {}
-
 SEC_LAKE_BUCKET = os.environ['SEC_LAKE_BUCKET']
-
-sysmon_mapping = { 
-    'sysmon_events':
-        {
-            1: {
-                'schema': 'process_activity',
-                'mapping': {   
-                    'metadata': {
-                        'profiles': 'host',
-                        'version': 'v1.0.0-rc2',
-                        'product' : {
-                            'name': 'System Monitor (Sysmon)',
-                            'vendor_name': 'Microsoft Sysinternals',
-                            'version': 'v15.0'
-                        }
-                    },
-                    'severity': 'Informational',
-                    'severity_id': 1,
-                    'category_uid': 1,
-                    'category_name': 'System Activity',
-                    'class_uid': 1007,
-                    'class_name': 'Process Activity',
-                    'type_uid': 100701,
-                    'time': 'Event.Description.UtcTime',
-                    'activity_id': {
-                        'enum': {
-                            'evaluate': 'Event.EventId',
-                            'values': {
-                                1: 1,
-                                5: 2,
-                                7: 3,
-                                10: 3,
-                                19: 3,
-                                20: 3,
-                                21: 3,
-                                25: 4
-                            },
-                            'other': 99
-                        }
-                    },
-                    'actor': {
-                        'process': 'Event.Description.Image'
-                    },
-                    'device': {
-                        'type_id': 6,
-                        'instance_uid': 'Event.source_instance_id'
-                    },
-                    'process': {
-                        'pid': 'Event.Description.ProcessId',
-                        'uid': 'Event.Description.ProcessGuid',
-                        'name': 'Event.Description.Image',
-                        'user': 'Event.Description.User',
-                        'loaded_modules': 'Event.Description.ImageLoaded'
-                    },
-                    'unmapped': {
-                        'rulename': 'Event.Description.RuleName'
-                    }
-                    
-                }
-            },
-            5: {
-                'schema': 'process_activity',
-                'mapping': {   
-                    'metadata': {
-                        'profiles': 'host',
-                        'version': 'v1.0.0-rc2',
-                        'product' : {
-                            'name': 'System Monitor (Sysmon)',
-                            'vendor_name': 'Microsoft Sysinternals',
-                            'version': 'v15.0'
-                        }
-                    },
-                    'severity': 'Informational',
-                    'severity_id': 1,
-                    'category_uid': 1,
-                    'category_name': 'System Activity',
-                    'class_uid': 1007,
-                    'class_name': 'Process Activity',
-                    'type_uid': 100701,
-                    'time': 'Event.Description.UtcTime',
-                    'activity_id': {
-                        'enum': {
-                            'evaluate': 'Event.EventId',
-                            'values': {
-                                1: 1,
-                                5: 2,
-                                7: 3,
-                                10: 3,
-                                19: 3,
-                                20: 3,
-                                21: 3,
-                                25: 4
-                            },
-                            'other': 99
-                        }
-                    },
-                    'actor': {
-                        'process': 'Event.Description.Image'
-                    },
-                    'device': {
-                        'type_id': 6,
-                        'instance_uid': 'Event.source_instance_id'
-                    },
-                    'process': {
-                        'pid': 'Event.Description.ProcessId',
-                        'uid': 'Event.Description.ProcessGuid',
-                        'name': 'Event.Description.Image',
-                        'user': 'Event.Description.User',
-                        'loaded_modules': 'Event.Description.ImageLoaded'
-                    },
-                    'unmapped': {
-                        'rulename': 'Event.Description.RuleName'
-                    }
-                    
-                }
-            },
-            11: {
-                'schema': 'file_activity',
-                'mapping': {   
-                    'metadata': {
-                        'profiles': 'host',
-                        'version': 'v1.0.0-rc2',
-                        'product' : {
-                            'name': 'System Monitor (Sysmon)',
-                            'vendor_name': 'Microsoft Sysinternals',
-                            'version': 'v15.0'
-                        }
-                    },
-                    'severity': 'Informational',
-                    'severity_id': 1,
-                    'category_uid': 1,
-                    'category_name': 'System Activity',
-                    'class_uid': 1001,
-                    'class_name': 'File Activity',
-                    'type_uid': 100101,
-                    'time': 'Event.Description.UtcTime',
-                    'activity_id': {
-                        'enum': {
-                            'evaluate': 'Event.EventId',
-                            'values': {
-                                2: 6,
-                                11: 1,
-                                15: 1,
-                                24: 3,
-                                23: 4
-                            },
-                            'other': 99
-                        }
-                    },
-                    'actor': {
-                        'process': 'Event.Description.Image'
-                    },
-                    'device': {
-                        'type_id': 6,
-                        'instance_uid': 'Event.source_instance_id'
-                    },
-                    'unmapped': {
-                        'rulename': 'Event.Description.RuleName',
-                        'process': {
-                            'pid': 'Event.Description.ProcessId',
-                            'uid': 'Event.Description.ProcessGuid',
-                            'name': 'Event.Description.Image',
-                            'user': 'Event.Description.User'
-                        }
-                    } 
-                }
-            },
-            23: {
-                'schema': 'file_activity',
-                'mapping': {   
-                    'metadata': {
-                        'profiles': 'host',
-                        'version': 'v1.0.0-rc2',
-                        'product' : {
-                            'name': 'System Monitor (Sysmon)',
-                            'vendor_name': 'Microsoft Sysinternals',
-                            'version': 'v15.0'
-                        }
-                    },
-                    'severity': 'Informational',
-                    'severity_id': 1,
-                    'category_uid': 1,
-                    'category_name': 'System Activity',
-                    'class_uid': 1001,
-                    'class_name': 'File Activity',
-                    'type_uid': 100101,
-                    'time': 'Event.Description.UtcTime',
-                    'activity_id': {
-                        'enum': {
-                            'evaluate': 'Event.EventId',
-                            'values': {
-                                2: 6,
-                                11: 1,
-                                15: 1,
-                                24: 3,
-                                23: 4
-                            },
-                            'other': 99
-                        }
-                    },
-                    'actor': {
-                        'process': 'Event.Description.Image'
-                    },
-                    'device': {
-                        'type_id': 6,
-                        'instance_uid': 'Event.source_instance_id'
-                    },
-                    'unmapped': {
-                        'rulename': 'Event.Description.RuleName',
-                        'process': {
-                            'pid': 'Event.Description.ProcessId',
-                            'uid': 'Event.Description.ProcessGuid',
-                            'name': 'Event.Description.Image',
-                            'user': 'Event.Description.User'
-                        }
-                    } 
-                }
-            }
-        }
-    }
 
 def perform_transform(event_mapping, sysmon_event):
     
@@ -296,6 +79,8 @@ def lambda_handler(event, context):
         payload = base64.b64decode(record['kinesis']['data']).decode('utf-8')
         print("Raw Sysmon event: "+str(payload))
         payload_json = json.loads(payload)
+        payload_json['EventId'] = str(payload_json['EventId'])
+        
         data = {}
         for line in payload_json['Description'].split('\r\n'):
             parts = line.split(': ', 1)  # Splitting by ': '
