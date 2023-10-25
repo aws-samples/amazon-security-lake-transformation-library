@@ -9,8 +9,8 @@
   "Sinks": [
     {
       "Id": "SysmonLogStream",
-      "SinkType": "KinesisFirehose",
-      "StreamName": "<CustomSourceKDFStreamName>",
+      "SinkType": "KinesisStream",
+      "StreamName": "<LogCollectionStreamName>",
       "ObjectDecoration": "source_instance_id={ec2:instance-id};",
       "Format": "json",
       "RoleARN": "<KinesisAgentIAMRoleARN>"
@@ -18,7 +18,7 @@
   ],
   "Pipes": [
     {
-      "Id": "JsonLogSourceToFirehoseLogStream",
+      "Id": "JsonLogSourceToKinesisLogStream",
       "SourceRef": "Sysmon",
       "SinkRef": "SysmonLogStream"
     }

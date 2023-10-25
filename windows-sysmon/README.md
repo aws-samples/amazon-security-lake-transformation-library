@@ -4,12 +4,12 @@
 
 ## Solution overview
 
-The solution for this pattern uses [Amazon Kinesis Data Firehose](https://aws.amazon.com/kinesis/data-firehose/) and [AWS Lambda](https://aws.amazon.com/lambda/) to implement the schema transformation. Kinesis Data Firehose is an extract, transform, and load (ETL) service that reliably captures, transforms, and delivers streaming data to data lakes, data stores, and analytics services. You can stream data into S3 and convert data into required formats like OCSF for analysis without building processing pipelines. Lambda is a serverless, event-driven compute service that lets you run code for virtually any type of application or backend service without provisioning or managing servers. You can integrate Lambda with Kinesis Data Firehose to trigger transformation tasks on events streaming in the Data Firehose.
+The solution for this pattern uses [Amazon Kinesis Data Streams](https://aws.amazon.com/kinesis/data-streams/) and [AWS Lambda](https://aws.amazon.com/lambda/) to implement the schema transformation. Kinesis Data Streams is a serverless streaming data service that makes it easy to capture, process, and store data streams at any scale. Lambda is a serverless, event-driven compute service that lets you run code for virtually any type of application or backend service without provisioning or managing servers. You can integrate Lambda with Kinesis Data Streams to trigger transformation tasks on events captured by the Data Streams.
 To stream sysmon logs from the host, you can use [Amazon Kinesis Agent for Microsoft Windows](https://docs.aws.amazon.com/kinesis-agent-windows/latest/userguide/what-is-kinesis-agent-windows.html). You can run this agent on fleets of Windows servers either hosted on-premises or in your AWS environment. 
 
 ![Sysmon Custom Source Architecture](./images/sysmon_arch.png)
 
-The above illustration shows the interaction of services involved in building the custom source. We will cover the solution implementation a bit later in this post, first let us understand how you can map sysmon events streaming through Kinesis Data Firehose into the relevant OCSF classes.
+The above illustration shows the interaction of services involved in building the custom source. We will cover the solution implementation a bit later in this post, first let us understand how you can map sysmon events streaming through Kinesis Data Stream into the relevant OCSF classes.
 
 
 ## Mapping
@@ -51,7 +51,7 @@ The above illustration shows the interaction of services involved in building th
 
 **Sample File System Activity event mapping**
 
-1. Event streamed using Kinesis Data Firehose
+1. Event streamed using Kinesis Data Streams
 
     ```json
     {"EventId":1,
@@ -94,7 +94,7 @@ The above illustration shows the interaction of services involved in building th
 
 1. **[AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tutorials_basic.html) is configured your AWS environment**. AWS Organizations is an AWS account management service that provides account management and consolidated billing capabilities so you can consolidate multiple AWS accounts and manage them centrally.
 
-2. Security Lake is activated and [delegated administrator is configured](https://docs.aws.amazon.com/security-lake/latest/userguide/multi-account-management.html).
+2. **Security Lake is activated and [delegated administrator is configured](https://docs.aws.amazon.com/security-lake/latest/userguide/multi-account-management.html)**.
 
     1. Navigate to the AWS Organizations console, and set up an organization with a [Log Archive account](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/log-archive.html). The Log Archive account should be used as the delegated Security Lake administrator account where you will configure Security Lake. For more information on deploying the full complement of AWS security services in a multi-account environment, see [AWS Prescriptive Guidance | AWS Security Reference Architecture](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html).
     2. Configure permissions for the Security Lake administrator access by using an [AWS Identity and Access Management (IAM) role](https://aws.amazon.com/iam/). This role should be used by security teams to administer Security Lake configuration, including managing custom sources.
@@ -102,44 +102,32 @@ The above illustration shows the interaction of services involved in building th
 
 ## Deployment
 
-The solution deployment is a 5 step process.
+The solution deployment is a 4 step process.
 
 ![Solution Deployment Steps](./images/deployment_overview.png)
 
-#### Step 1: Deploy OCSF transformation Lambda function
+#### Step 1: Deploy log streaming and transformation infrastructure
 1. Sign in to the Amazon Security Lake delegated administrator account.
 
-2. Deploy the lambda function in the `lambda` folder. ##### TODO SAM-ify
+2. Navigate to the [`sysmon_ocsf_tranform_sam` folder](./sysmon_ocsf_transform_sam/) in this project. Follow the instructions in the README to deploy the log streaming infrastructure and transformation infrastructure. The infrastructure is deployed using the [AWS Serverless Application Model (AWS SAM)](https://aws.amazon.com/serverless/sam/) which is an open-source framework for building serverless applications.
 
-3. Capture the ARN of the Lambda function.
+3. Capture the outputs of the deployment for use in the next step.
 
-#### Step 2: Deploy streaming infrastructure
+#### Step 2: Add custom source in Security Lake
 
-1. Navigate to AWS CloudFormation and deploy the streaming infrastructure using the CloudFormation template titled `LogIngestionInfrastructure.yaml`.
+1. Set up the Glue IAM role for the custom resource by deploying the `ASLCustomSourceGlueRole.yaml` CloudFormation template. The template requires the following inputs:
     
-    The CloudFormation template requires the below inputs:
+    * CustomSourceName: This is the name of the custom source you want to add in Security Lake.
+    * ASLCustomLogSourceLocation: Amazon Security Lake (ASL) S3 bucket name with custom log location including the trailing slash (eg. my_bucket/ext/my_custom_source/)
 
-    * `SourceKinesisUserARNs`: This is the list of AWS Principals that are associated with the on-premises servers and EC2 instances that use the Kinesis Agent for Microsoft Windows to stream logs to the Kinesis Data Firehose for log delivery to Security Lake S3 buckets. 
-    * `CustomSourceName`: Name of the custom source you will add with Security Lake.
-    * `LogCollectionS3BucketARN`: ARN of the Security Lake S3 bucket where the log data will be delivered to.
-    * `OCSFConversionLambdaFunctionARN`: ARN of the Lambda function deployed in the previous step for OCSF conversion.
-    * `S3LogDeliveryPrefix`: Log delivery prefix for the custom source. This parameter should start with `ext/` and include the custom source name. For example, `ext/<custom_source_name>`.
+    The template produces one output, `CustomSourceGlueRoleARN`, which is the ARN of the IAM role created for Glue to use with custom sources.
+    
+    Capture this output for use in the next step.
 
-    The CloudFormation template produces the following outputs:
-
-    * `CustomSourceKDFStreamName`: Name of the Amazon Kinesis Data Firehose delivery stream
-    * `KinesisMonitoringPutRecordAlarm`: Name of the Amazon CloudWatch alarm that monitors healthy Kinesis operation.
-    * `WindowsSysmonGlueRoleARN`: Name of the IAM role created for Glue to use with custom sources.
-    * `KinesisAgentIAMRoleARN`: ARN of the IAM role created for Kinesis agent to assume for log streaming.
-
-2. Capture the outputs of the CloudFormation stack on a scratchpad.
-
-#### Step 3: Add custom source in Security Lake
-
-1. In the following command, replace the placeholders as below:
+2. Use AWS CloudShell, a browser based shell, in the Security Lake delegated administrator account to run the command in this step after you have replaced the placeholders.
 
     * `<SECURITY_LAKE_REGION>` with the region where Security Lake is configured.
-    * `<GLUE_IAM_ROLE_ARN>` with the value of the CloudFormation output named `WindowsSysmonGlueRoleARN` captured in the previous step.
+    * `<GLUE_IAM_ROLE_ARN>` with the value of the CloudFormation output named `CustomSourceGlueRoleARN` captured in the previous step.
     * `<EXTERNAL_ID>` is an alphanumeric value you can assign to configure fine grained access control. For the `windows-sysmon` custom source, you can assign it any value you like. In some cases, where you are using an external product, the vendor will supply the [External ID](https://aws.amazon.com/blogs/security/how-to-use-external-id-when-granting-access-to-your-aws-resources/) to you. 
     * `<AWS_IDENTITY_PRINCIPAL>` with the Security Lake delegated administrator AWS Account ID.
 
@@ -153,7 +141,7 @@ The solution deployment is a 5 step process.
         --region <SECURITY_LAKE_REGION>
     ```
 
-2. Use AWS CloudShell, a browser based shell, in the Security Lake delegated administrator account to run the above command after you have replaced the placeholders. The output of the command will reveal the attributes of associate Glue resource along with Security Lake S3 bucket location and the associated IAM role ARN. See example output below:
+    The output of the command will reveal the attributes of the associated Glue resources along with Security Lake S3 bucket location and the associated IAM role ARN. Verify with sample output below:
 
     ```json
     {
@@ -171,7 +159,7 @@ The solution deployment is a 5 step process.
         }
     }
     ```
-#### Step 4: Update the default Glue Crawler
+#### Step 3: Update the default Glue Crawler
 
 In its default configuration, the Glue crawler created for the custom source does not address complex use cases where a single log source has events mapped to multiple OCSF classes. You will need to change the Crawler configuration for such configurations.
 
@@ -202,13 +190,13 @@ In its default configuration, the Glue crawler created for the custom source doe
 
 5. You can choose to let the crawler run on a schedule or manually trigger the crawler once the ETL has been deployed and log streaming is configured.
 
-#### Step 5: Configure hosts to stream log data
+#### Step 4: Configure hosts to stream log data
 
 1. Install [Kinesis Agent for Microsoft Windows](https://docs.aws.amazon.com/kinesis-agent-windows/latest/userguide/getting-started.html#getting-started-installation). There are three ways you can install the agent on Windows Operating Systems. Using [AWS Systems Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/), helps automate the deployment and upgrade process. You can also install using a Windows installer package or using PowerShell scripts.
 
 2. Access the remote host running Microsoft Windows Operating System. This solution uses [sysmonconfig.xml](https://github.com/olafhartong/sysmon-modular/blob/master/sysmonconfig.xml) published in the [sysmon-modular](https://github.com/olafhartong/sysmon-modular) project. The project provides a modular configuration along with publishing Tactics, Techniques and Procedures (TTPs) with sysmon events to help in [TTP-based threat hunting](https://www.mitre.org/news-insights/publication/ttp-based-hunting) use cases. If you have your own curated sysmon configuration, you can also choose to use your own configuration.
 
-3. On the remote host, update the Kinesis agent configuration file contents with the contents of `kinesis_agent_configuration.json` file from this repository. Make sure you replace `<CustomSourceKDFStreamName>` placeholder with the value of the CloudFormation output `CustomSourceKDFStreamName` and `<KinesisAgentIAMRoleARN>` placeholder with the value of the CloudFormation output `KinesisAgentIAMRoleARN` from Step 2.
+3. On the remote host, update the Kinesis agent configuration file contents with the contents of `kinesis_agent_configuration.json` file from this repository. Make sure you replace `<LogCollectionStreamName>` and `<KinesisAgentIAMRoleARN>` placeholders with the value of the CloudFormation outputs, `LogCollectionStreamName` and `KinesisAgentIAMRoleARN`, you captured in **Step 1: Deploy log streaming and transformation infrastructure**.
 
     > **_Note_**: For on-premises servers running the agent, please replace `{ec2:instance-id}` in the _ObjectDecoration_ value under _Sinks_ configuration with the server identifier. For more information, see [Configuring Amazon Kinesis Agent for Microsoft Windows](https://docs.aws.amazon.com/kinesis-agent-windows/latest/userguide/configuring-kinesis-agent-windows.html).
 
@@ -224,8 +212,8 @@ In its default configuration, the Glue crawler created for the custom source doe
         "Sinks": [
             {
             "Id": "SysmonLogStream",
-            "SinkType": "KinesisFirehose",
-            "StreamName": "<CustomSourceKDFStreamName>",
+            "SinkType": "KinesisStream",
+            "StreamName": "<LogCollectionStreamName>",
             "ObjectDecoration": "source_instance_id={ec2:instance-id};",
             "Format": "json",
             "RoleARN": "<KinesisAgentIAMRoleARN>"
@@ -233,7 +221,7 @@ In its default configuration, the Glue crawler created for the custom source doe
         ],
         "Pipes": [
             {
-            "Id": "JsonLogSourceToFirehoseLogStream",
+            "Id": "JsonLogSourceToKinesisLogStream",
             "SourceRef": "Sysmon",
             "SinkRef": "SysmonLogStream"
             }

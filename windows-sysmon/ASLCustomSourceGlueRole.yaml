@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  This template creates an IAM role for the AWS Glue configuration for the Security Lake custom source.
+Parameters:
+  CustomSourceName:
+    Type: String
+    Description: Name of the custom source.
+  ASLCustomLogSourceLocation:
+    Type: String
+    Description: Amazon Security Lake (ASL) S3 bucket name with custom log location including the trailing slash (eg. my_bucket/ext/my_custom_source/)
+
+Resources:
+  CustomSourceGlueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ['', [ !Ref CustomSourceName, '-glue-role'] ]
+      Path: "/service-role/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+      Policies:
+        - PolicyName: !Join ['', [ !Ref CustomSourceName, '-glue-policy'] ]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: S3WriteRead
+                Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                Resource: !Sub 'arn:aws:s3:::${ASLCustomLogSourceLocation}*'
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - sts:AssumeRole
+Outputs:
+  CustomSourceGlueRoleARN:
+    Description: ARN of the IAM role created for Glue to use with custom sources.
+    Value: !GetAtt CustomSourceGlueRole.Arn
