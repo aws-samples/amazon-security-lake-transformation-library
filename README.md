@@ -1,6 +1,6 @@
 # amazon-security-lake-transformation-library
 
-This repository is a collection of community managed [custom sources](https://docs.aws.amazon.com/security-lake/latest/userguide/custom-sources.html) configurations for Amazon Security Lake.
+This repository is a collection of community managed [custom sources](https://docs.aws.amazon.com/security-lake/latest/userguide/custom-sources.html) for Amazon Security Lake.
 
 ## Amazon Security Lake custom sources
 
@@ -20,3 +20,6 @@ The OCSF project is a vendor-agnostic and open source standard that customers ca
     2. Configure permissions for the Security Lake administrator access by using an [AWS Identity and Access Management (IAM) role](https://aws.amazon.com/iam/). This role should be used by security teams to administer Security Lake configuration, including managing custom sources.
     3. Enable Security Lake in the Region of your choice in the Log Archive account. When you configure Security Lake, you can define your collection objectives, which include log sources, the Regions that you want to collect the log sources from and the lifecycle policy you want to assign to the log sources. Security Lake uses [Amazon Simple Storage Service (Amazon S3)](https://aws.amazon.com/s3/) as the underlying storage for the log data. S3 is an object storage service offering industry-leading scalability, data availability, security, and performance. S3 is built to store and retrieve any amount of data from anywhere. Security Lake creates and configures individual S3 buckets in each Region identified in the collection objectives, in the Log Archive account.
 
+## Contributing
+
+See [CONTRIBUTING](./CONTRIBUTING.md) for more information.
