@@ -4,7 +4,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "amazon-security-lake-transformation-lambda"
+stack_name = "sysmon-ocsf-transformation-lambda"
 
 [default.build.parameters]
 cached = true
