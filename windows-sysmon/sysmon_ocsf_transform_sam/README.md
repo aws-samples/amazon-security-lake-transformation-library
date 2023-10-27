@@ -17,15 +17,15 @@ This project contains the following files and folders:
 
 This project deploys the following resources:
 
-`OCSFTransformationLambdaFunction`: The OCSF transformation lambda function and layers.
-`LogCollectionStream`: Kinesis Data Stream to collect logs from the Kinesis Agents configured in the log generating Microsoft Windows Servers.
-`KinesisAgentIAMRole`: AWS IAM role to be used by the Kinesis Agent to stream logs to the Kinesis Data Stream.
+* `OCSFTransformationLambdaFunction`: The OCSF transformation lambda function and layers.
+* `LogCollectionStream`: Kinesis Data Stream to collect logs from the Kinesis Agents configured in the log generating Microsoft Windows Servers.
+* `KinesisAgentIAMRole`: AWS IAM role to be used by the Kinesis Agent to stream logs to the Kinesis Data Stream.
 
 The template produces the following outputs which you will use in the next steps:
 
-`OCSFTransformationLambdaFunctionARN`: ARN of the OCSF Transformation Lambda Function.
-`LogCollectionStreamName`: Name of the log collection Kinesis Data Stream.
-`KinesisAgentIAMRoleARN`: ARN of the IAM role created for Kinesis agent to assume for log streaming.
+* `OCSFTransformationLambdaFunctionARN`: ARN of the OCSF Transformation Lambda Function.
+* `LogCollectionStreamName`: Name of the log collection Kinesis Data Stream.
+* `KinesisAgentIAMRoleARN`: ARN of the IAM role created for Kinesis agent to assume for log streaming.
 
 ## Mapping configuration
 
