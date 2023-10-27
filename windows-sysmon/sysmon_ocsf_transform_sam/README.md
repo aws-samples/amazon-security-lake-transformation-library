@@ -3,9 +3,9 @@
 This project contains source code and supporting files for a serverless application that transforms Sysmon events into applicable Open Cybersecurity Schema Framework (OSCF) schemas.
 
 The application will deploy:
-- a Kinesis Stream that Kinesis agents for Windows can send Sysmon events to
-- an IAM role Kinesis agents can use to interact with the Kinesis Stream
-- a Lambda function that reads Sysmon events from the Kinesis Stream, transforms them based on the `sysmon_mapping.json` configuration file and then outputs the events in Parquet format into an S3 bucket set up as a custom log source for Amazon Security Lake.
+- a Kinesis Data Stream that Kinesis agents for Windows can send Sysmon events to
+- an IAM role Kinesis agents can use to interact with the Kinesis Data Stream
+- a Lambda function that reads Sysmon events from the Kinesis Data Stream, transforms them based on the `sysmon_mapping.json` configuration file and then outputs the events in Parquet format into an S3 bucket set up as a custom log source for Amazon Security Lake.
 
 ## Configuration
 The lambda uses a `sysmon_mapping.json` file that specifies the OCSF schema each Sysmon event type should be transformed to as well as the the mapping of Sysmon to OCSF fields. The config currently support events `1`, `5`, `11` & `23` but can easily be extended to handle addition types.
