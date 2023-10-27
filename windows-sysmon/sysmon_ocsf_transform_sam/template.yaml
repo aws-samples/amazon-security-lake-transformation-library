@@ -81,9 +81,9 @@ Resources:
               - sts:AssumeRole
 
 Outputs:
-  OCSFTransformationLambdaFunctionName:
-    Description: "OCSF Transformation Lambda Function name"
-    Value: !Ref OCSFTransformationLambdaFunction
+  OCSFTransformationLambdaFunctionARN:
+    Description: "OCSF Transformation Lambda Function ARN"
+    Value: !Ref OCSFTransformationLambdaFunction.Arn
 
   LogCollectionStreamName:
     Description: "Name of the log collection Kinesis Stream"
