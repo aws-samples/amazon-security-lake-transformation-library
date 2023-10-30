@@ -205,7 +205,7 @@ In its default configuration, the Glue crawler created for the custom source doe
 
 3. The kinesis agent can use a custom IAM role to stream log data to Kinesis Data Streams. For on-premises servers, you should configure an IAM user that has the permission to assume the `KinesisAgentIAMRole`. On EC2 instances, the instance profile should include permissions to assume the same IAM role.
     
-    On the remote host, update the Kinesis agent configuration file contents with the contents of `kinesis_agent_configuration.json` file from this repository. Make sure you replace `<LogCollectionStreamName>` and `<KinesisAgentIAMRoleARN>` placeholders with the value of the CloudFormation outputs, `LogCollectionStreamName` and `KinesisAgentIAMRoleARN`, you captured in **Step 1: Deploy log streaming and transformation infrastructure**.
+    On the remote host, update the Kinesis agent configuration file `%PROGRAMFILES%\Amazon\AWSKinesisTap\appsettings.json` contents with the contents of `kinesis_agent_configuration.json` file from this repository. Make sure you replace `<LogCollectionStreamName>` and `<KinesisAgentIAMRoleARN>` placeholders with the value of the CloudFormation outputs, `LogCollectionStreamName` and `KinesisAgentIAMRoleARN`, you captured in **Step 1: Deploy log streaming and transformation infrastructure**.
 
     > **_Note_**: For on-premises servers running the agent, please replace `{ec2:instance-id}` in the _ObjectDecoration_ value under _Sinks_ configuration with the server identifier. For more information, see [Configuring Amazon Kinesis Agent for Microsoft Windows](https://docs.aws.amazon.com/kinesis-agent-windows/latest/userguide/configuring-kinesis-agent-windows.html).
 
@@ -239,3 +239,17 @@ In its default configuration, the Glue crawler created for the custom source doe
         "Telemetrics": { "off": "true" }
     }
     ```
+
+## Accessing log data
+
+After the log ingestion and transformation pipeline is configured and the crawler has created the Glue tables, you will need to [configure access to the tables from the query tool in Lake Formation](https://docs.aws.amazon.com/lake-formation/latest/dg/granting-table-permissions.html).
+
+Use the link above to configure access to the data. For this solution you will choose the following options for the Lake Formation attributes:
+
+1. For **LF-Tags or catalog resources**, select **Named data catalog resources**.
+2. From the **Databases** dropdown, select the Security Lake database starting with *amazon_security_lake_glue_db_*.
+3. From the **Tables** dropdown, select the Security Lake custom source tables. For example, *amazon_security_lake_table_ap_southeast_2_ext_windows_sysmon_file_activity*.
+4. In the **Table and column permissions** section, choose **Select** and **Describe** permissions for both **Table permissions** and **Grantable permissions**.
+5. For **Data permissions**, select **All data access**.
+
+The above configuration will give relevant permissions to the Principals specified.
