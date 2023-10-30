@@ -83,7 +83,7 @@ Resources:
 Outputs:
   OCSFTransformationLambdaFunctionARN:
     Description: "OCSF Transformation Lambda Function ARN"
-    Value: !Ref OCSFTransformationLambdaFunction.Arn
+    Value: !GetAtt OCSFTransformationLambdaFunction.Arn
 
   LogCollectionStreamName:
     Description: "Name of the log collection Kinesis Stream"
