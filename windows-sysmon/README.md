@@ -111,6 +111,8 @@ The solution deployment is a 4 step process.
 
 ![Solution Deployment Steps](./images/deployment_overview.png)
 
+> **_NOTE:_**  As you proceed through the data pipeline and ETL infrastructure deployment, there are multiple times that you will need to provide the `custom source name` as an input parameter. Please make sure you are using exactly the same string everywhere.
+
 #### Step 1: Deploy log streaming and transformation infrastructure
 1. Sign in to the Amazon Security Lake delegated administrator account.
 
@@ -122,8 +124,8 @@ The solution deployment is a 4 step process.
 
 1. Set up the Glue IAM role for the custom resource by deploying the `ASLCustomSourceGlueRole.yaml` CloudFormation template. The template requires the following inputs:
     
-    * CustomSourceName: This is the name of the custom source you want to add in Security Lake.
-    * ASLCustomLogSourceLocation: Amazon Security Lake (ASL) S3 bucket name with custom log location including the trailing slash (eg. my_bucket/ext/my_custom_source/)
+    * `CustomSourceName`: This is the name of the custom source you want to add in Security Lake.
+    * `ASLCustomLogSourceLocation`: Amazon Security Lake (ASL) S3 bucket name with custom log location including the trailing slash (eg. my_bucket/ext/my_custom_source/)
 
     The template produces one output, `CustomSourceGlueRoleARN`, which is the ARN of the IAM role created for Glue to use with custom sources.
     
