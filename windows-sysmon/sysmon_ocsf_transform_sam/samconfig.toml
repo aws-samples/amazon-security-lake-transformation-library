@@ -4,11 +4,14 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "sysmon-ocsf-transformation-lambda"
+stack_name = "sysmon-ocsf-transform-lambda"
 
 [default.build.parameters]
 cached = true
 parallel = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_NAMED_IAM"
 
 [default.validate.parameters]
 lint = true
