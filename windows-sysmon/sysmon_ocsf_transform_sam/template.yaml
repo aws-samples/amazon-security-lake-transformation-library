@@ -20,6 +20,9 @@ Parameters:
     Type: List<String>
     Description: ARNs of IAM entities associated with servers and EC2 instances running the Kinesis Agent for log streaming.
 
+Conditions:
+  CreateKinesisAgentRole: !Not [!Equals [!Join ['', !Ref SourceKinesisUserARNs], '']]
+
 Resources:
   OCSFTransformationLambdaFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -58,6 +61,7 @@ Resources:
 
   KinesisAgentIAMRole:
     Type: AWS::IAM::Role
+    Condition: CreateKinesisAgentRole
     Properties:
       RoleName: KinesisAgentIAMRole
       Policies:
@@ -90,5 +94,6 @@ Outputs:
     Value: !Ref LogCollectionStream
 
   KinesisAgentIAMRoleARN:
+    Condition: CreateKinesisAgentRole
     Description: ARN of the IAM role created for Kinesis agent to assume for log streaming.
     Value: !GetAtt KinesisAgentIAMRole.Arn
