@@ -59,7 +59,6 @@ Resources:
   LogCollectionStream:
     Type: AWS::Kinesis::Stream
     Properties:
-      Name: sysmon-ocsf-stream
       ShardCount: 1
       StreamEncryption:
         EncryptionType: KMS
@@ -69,7 +68,6 @@ Resources:
     Type: AWS::IAM::Role
     Condition: CreateKinesisAgentRole
     Properties:
-      RoleName: KinesisAgentIAMRole
       Policies:
       - PolicyName: KinesisAgentIAMPolicy
         PolicyDocument:
