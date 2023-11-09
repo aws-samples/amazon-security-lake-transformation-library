@@ -25,6 +25,49 @@ Conditions:
 
 Resources:
 
+  OCSFTransformationLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Policies:
+      - PolicyName: OCSFTransformationLambdaExecutionRolePolicy
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Sid: KinesisReadWrite
+              Effect: Allow
+              Action:
+                - kinesis:PutRecord
+                - kinesis:PutRecords
+                - kinesis:DescribeStream
+                - kinesis:DescribeStreamSummary
+                - kinesis:GetRecords
+                - kinesis:GetShardIterator
+                - kinesis:ListShards
+                - kinesis:ListStreams
+                - kinesis:SubscribeToShard
+              Resource: !GetAtt LogCollectionStream.Arn
+            - Sid: LogsCreateWrite
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:*'
+            - Sid: S3Write
+              Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectAcl
+              Resource: !Sub 'arn:aws:s3:::${ASLCustomLogSourceLocation}*'
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
   OCSFTransformationLambdaFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -32,16 +75,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.10
       ReservedConcurrentExecutions: 10
-      Tracing: Active
-      Policies:
-        - AWSLambdaExecute # Managed Policy
-        - Version: '2012-10-17' # Policy Document
-          Statement:
-            - Effect: Allow
-              Action:
-                - s3:PutObject
-                - s3:PutObjectAcl
-              Resource: !Sub 'arn:aws:s3:::${ASLCustomLogSourceLocation}*'
+      Role: !GetAtt OCSFTransformationLambdaExecutionRole.Arn
       Layers:
         - !Sub 'arn:aws:lambda:${AWS::Region}:336392948345:layer:AWSSDKPandas-Python310:5'
       Environment:
