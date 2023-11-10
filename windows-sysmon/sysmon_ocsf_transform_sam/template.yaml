@@ -59,6 +59,15 @@ Resources:
                 - s3:PutObject
                 - s3:PutObjectAcl
               Resource: !Sub 'arn:aws:s3:::${ASLCustomLogSourceLocation}*'
+            - Sid: TracingWithXRay
+              Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+                - xray:GetSamplingRules
+                - xray:GetSamplingTargets
+                - xray:GetSamplingStatisticSummaries
+              Resource: '*'
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -74,6 +83,7 @@ Resources:
       CodeUri: lambda/
       Handler: app.lambda_handler
       Runtime: python3.10
+      Tracing: Active
       ReservedConcurrentExecutions: 10
       Role: !GetAtt OCSFTransformationLambdaExecutionRole.Arn
       Layers:
