@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import logging
 import uuid
 import datetime
 import pandas as pd
@@ -9,7 +10,14 @@ import awswrangler as wr
 # Consider overrides for account_id and region
 SEC_LAKE_BUCKET = os.environ['SEC_LAKE_BUCKET']
 
-print('Loading function')
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+if os.environ['DEBUG'].lower() == 'true':
+    logger.setLevel(logging.DEBUG)
+
+logger.info('Loading function')
 payload_json = {}
 
 # Get config for mapping
@@ -47,7 +55,7 @@ def perform_transform(event_mapping, sysmon_event):
                 results_dict = sysmon_event
                 # iterater through nested values in the payload until we get the final value
                 for sysmon_key in json_path:
-                        results_dict = results_dict.get(sysmon_key)
+                    results_dict = results_dict.get(sysmon_key)
                 new_record[key] = str(results_dict)
             # if its a string and its using Metadata. dot notation
             elif isinstance(event_mapping[key], str) and (event_mapping[key].startswith('Metadata.')):
@@ -74,9 +82,11 @@ def lambda_handler(event, context):
     transformed_records = {}
     
     for record in event['Records']:
-        print(record['eventID'])
+        logger.info('EventID: '+record['eventID'])
         payload = base64.b64decode(record['kinesis']['data']).decode('utf-8')
-        print("Raw Sysmon event: "+str(payload))
+
+        logger.debug("Raw Sysmon event: "+str(payload))
+
         payload_json = json.loads(payload)
         payload_json['EventId'] = str(payload_json['EventId'])
 
@@ -91,13 +101,13 @@ def lambda_handler(event, context):
         payload_json['Description'] = data
 
         if payload_json['EventId'] in sysmon_mapping['sysmon_events']:
-            print("Found event mapping: "+str(sysmon_mapping['sysmon_events'][payload_json['EventId']]))
+            logger.debug("Found event mapping: "+str(sysmon_mapping['sysmon_events'][payload_json['EventId']]))
             new_map = perform_transform(sysmon_mapping['sysmon_events'][payload_json['EventId']]['mapping'], payload_json)
             new_schema = {}
             new_schema['target_schema'] = sysmon_mapping['sysmon_events'][payload_json['EventId']]['schema']
             new_schema['target_mapping'] = new_map
-                
-            print("Transformed OCSF record: "+str(new_schema))
+
+            logger.debug("Transformed OCSF record: "+str(new_schema))
                 
             output_record = {
                 'recordId': record['eventID'],
@@ -106,11 +116,10 @@ def lambda_handler(event, context):
             }
             output.append(output_record)
             output_for_df.append(new_schema)
-                
-        else: # we dont have an event Id mapping so drop the record
-        
-            print("Dropped record - no mapping for event")
-        
+
+        else:
+
+            logger.info("Dropped record - no mapping for event")
             output_record = {
                     'recordId': record['eventID'],
                     'result': 'No mapping for event',
@@ -127,14 +136,14 @@ def lambda_handler(event, context):
             df_map = (df[df['target_schema']==ocsf_schema])
             df_map = pd.json_normalize(df_map['target_mapping'], max_level=0)
             s3_url = f's3://{SEC_LAKE_BUCKET}1.0/{ocsf_schema.upper()}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
-            print(s3_url)
+            logger.info("Writing transformed events to: "+s3_url)
             wr.s3.to_parquet(
                 df=df_map,
                 path=s3_url,
                 compression='gzip'
             )
-            print("Successfully wrote to: "+s3_url)
+            logger.info("Successfully wrote to: "+s3_url)
 
-    print('Successfully processed {} records.'.format(len(event['Records'])))
+    logger.info('Successfully processed {} records.'.format(len(event['Records'])))
 
     return {'records': output}

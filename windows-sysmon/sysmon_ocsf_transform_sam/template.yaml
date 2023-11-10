@@ -92,6 +92,7 @@ Resources:
         Variables:
           SEC_LAKE_BUCKET:
             Ref: ASLCustomLogSourceLocation
+          DEBUG: false
       Events:
         Stream:
           Type: Kinesis
