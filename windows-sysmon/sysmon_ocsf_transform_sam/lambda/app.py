@@ -82,7 +82,7 @@ def lambda_handler(event, context):
     transformed_records = {}
     
     for record in event['Records']:
-        logger.info('EventID: '+record['eventID'])
+        logger.info('Kinesis Data Streams event: '+record['eventID'])
         payload = base64.b64decode(record['kinesis']['data']).decode('utf-8')
 
         logger.debug("Raw Sysmon event: "+str(payload))
