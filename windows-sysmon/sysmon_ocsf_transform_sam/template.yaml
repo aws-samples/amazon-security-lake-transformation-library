@@ -14,6 +14,7 @@ Globals:
 Parameters:
   ASLCustomLogSourceLocation:
     Type: String
+    AllowedPattern: ".+"
     Description: Amazon Security Lake (ASL) S3 bucket name with custom log location including the trailing slash (eg. my_bucket/ext/my_custom_source/)
 
   SourceKinesisUserARNs:
