@@ -76,10 +76,8 @@ def lambda_handler(event, context):
     dt_now = datetime.datetime.now()
     eventday = str(dt_now.year)+str(dt_now.month)+str(dt_now.day)
     
-    output = []
     output_for_df = []
-
-    transformed_records = {}
+    unmapped_events =[]
     
     for record in event['Records']:
         logger.info('Kinesis Data Streams event: '+record['eventID'])
@@ -108,24 +106,12 @@ def lambda_handler(event, context):
             new_schema['target_mapping'] = new_map
 
             logger.debug("Transformed OCSF record: "+str(new_schema))
-                
-            output_record = {
-                'recordId': record['eventID'],
-                'result': 'Ok',
-                'data': base64.b64encode(str(new_schema['target_mapping']).encode('utf-8')).decode('utf-8')
-            }
-            output.append(output_record)
+
             output_for_df.append(new_schema)
 
         else:
-
-            logger.info("Dropped record - no mapping for event")
-            output_record = {
-                    'recordId': record['eventID'],
-                    'result': 'No mapping for event',
-                    'data': payload_json
-                }
-            output.append(output_record)
+            logger.info("Found unmapped event")
+            unmapped_events.append(payload_json)
     
     if output_for_df:
         
@@ -144,6 +130,19 @@ def lambda_handler(event, context):
             )
             logger.info("Successfully wrote to: "+s3_url)
 
+    if unmapped_events:
+
+        unmapped_events_df = pd.DataFrame(unmapped_events)
+
+        s3_url = f's3://{SEC_LAKE_BUCKET}UNMAPPED_EVENTS/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
+        logger.info("Writing unmapped events to: "+s3_url)
+        wr.s3.to_parquet(
+            df=unmapped_events_df,
+            path=s3_url,
+            compression='gzip'
+            )
+        logger.info("Successfully wrote unmapped events to: "+s3_url)
+
     logger.info('Successfully processed {} records.'.format(len(event['Records'])))
 
-    return {'records': output}
+    return
