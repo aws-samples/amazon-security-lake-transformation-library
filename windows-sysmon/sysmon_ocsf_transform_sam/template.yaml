@@ -47,6 +47,11 @@ Resources:
                 - kinesis:ListStreams
                 - kinesis:SubscribeToShard
               Resource: !GetAtt LogCollectionStream.Arn
+            - Sid: KMSAccess
+              Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource: !GetAtt KinesisStreamKey.Arn
             - Sid: LogsCreateWrite
               Effect: Allow
               Action:
@@ -102,13 +107,29 @@ Resources:
             BatchSize: 100
             StartingPosition: LATEST
 
+  KinesisStreamKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Enabled: True
+      EnableKeyRotation: True
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-default-1
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+
   LogCollectionStream:
     Type: AWS::Kinesis::Stream
     Properties:
       ShardCount: 1
       StreamEncryption:
         EncryptionType: KMS
-        KeyId: alias/aws/kinesis
+        KeyId: !Ref KinesisStreamKey
 
   KinesisAgentIAMRole:
     Type: AWS::IAM::Role
@@ -125,6 +146,11 @@ Resources:
                   - kinesis:PutRecord
                   - kinesis:PutRecords
                 Resource: !GetAtt LogCollectionStream.Arn
+              - Sid: KMSAccess
+                Effect: Allow
+                Action:
+                  - kms:GenerateDataKey
+                Resource: !GetAtt KinesisStreamKey.Arn
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
