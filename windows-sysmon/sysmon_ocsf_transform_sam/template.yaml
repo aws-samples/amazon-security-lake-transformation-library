@@ -52,10 +52,14 @@ Resources:
               Action:
                 - kms:Decrypt
               Resource: !GetAtt KinesisStreamKey.Arn
-            - Sid: LogsCreateWrite
+            - Sid: LogGroupCreate
               Effect: Allow
               Action:
                 - logs:CreateLogGroup
+              Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+            - Sid: LogsWrite
+              Effect: Allow
+              Action:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
               Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:*'
@@ -135,6 +139,7 @@ Resources:
     Type: AWS::IAM::Role
     Condition: CreateKinesisAgentRole
     Properties:
+      RoleName: KinesisAgentIAMRole
       Policies:
       - PolicyName: KinesisAgentIAMPolicy
         PolicyDocument:
