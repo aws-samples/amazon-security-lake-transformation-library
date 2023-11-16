@@ -74,7 +74,7 @@ def lambda_handler(event, context):
     aws_region = context.invoked_function_arn.split(":")[3]
     
     dt_now = datetime.datetime.now()
-    eventday = str(dt_now.year)+str(dt_now.month)+str(dt_now.day)
+    eventday = str(dt_now.year)+f'{dt_now.month:02d}'+f'{dt_now.day:02d}'
     
     output_for_df = []
     unmapped_events =[]
