@@ -15,7 +15,7 @@ Parameters:
   ASLCustomLogSourceLocation:
     Type: String
     AllowedPattern: ".+"
-    Description: Amazon Security Lake (ASL) S3 bucket name with custom log location including the trailing slash (eg. my_bucket/ext/my_custom_source/)
+    Description: Amazon Security Lake (ASL) S3 bucket name with custom log location excluding the trailing slash (eg. my_bucket/ext/my_custom_source)
 
   SourceKinesisUserARNs:
     Type: List<String>
@@ -68,7 +68,7 @@ Resources:
               Action:
                 - s3:PutObject
                 - s3:PutObjectAcl
-              Resource: !Sub 'arn:aws:s3:::${ASLCustomLogSourceLocation}*'
+              Resource: !Sub 'arn:aws:s3:::${ASLCustomLogSourceLocation}/*'
             - Sid: TracingWithXRay
               Effect: Allow
               Action:
