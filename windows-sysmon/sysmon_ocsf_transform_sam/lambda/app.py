@@ -121,7 +121,7 @@ def lambda_handler(event, context):
         for ocsf_schema in df_schemas:
             df_map = (df[df['target_schema']==ocsf_schema])
             df_map = pd.json_normalize(df_map['target_mapping'], max_level=0)
-            s3_url = f's3://{SEC_LAKE_BUCKET}1.0/{ocsf_schema.upper()}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
+            s3_url = f's3://{SEC_LAKE_BUCKET}/1.0/{ocsf_schema.upper()}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
             logger.info("Writing transformed events to: "+s3_url)
             wr.s3.to_parquet(
                 df=df_map,
@@ -134,7 +134,7 @@ def lambda_handler(event, context):
 
         unmapped_events_df = pd.DataFrame(unmapped_events)
 
-        s3_url = f's3://{SEC_LAKE_BUCKET}UNMAPPED_EVENTS/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
+        s3_url = f's3://{SEC_LAKE_BUCKET}/UNMAPPED_EVENTS/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
         logger.info("Writing unmapped events to: "+s3_url)
         wr.s3.to_parquet(
             df=unmapped_events_df,
