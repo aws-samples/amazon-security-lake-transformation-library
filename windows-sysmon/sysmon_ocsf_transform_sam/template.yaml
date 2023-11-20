@@ -1,9 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  amazon-security-lake-transformation-lambda
-
-  SAM deployment template for amazon-security-lake-transformation-lambda
+  SAM deployment template for sysmon-ocsf-transform-infrastructure
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -19,7 +17,12 @@ Parameters:
 
   SourceKinesisUserARNs:
     Type: List<String>
-    Description: ARNs of IAM entities associated with servers and EC2 instances running the Kinesis Agent for log streaming.
+    Description: ARNs of IAM identities associated with servers and EC2 instances running the Kinesis Agent for log streaming.
+
+  StreamEncryptionKeyAdminARNs:
+    Type: List<String>
+    AllowedPattern: ".+"
+    Description: ARNs of IAM identities that administer the CMK used for Kinesis stream encryption, please include the user that deploys the SAM package.
 
 Conditions:
   CreateKinesisAgentRole: !Not [!Equals [!Join ['', !Ref SourceKinesisUserARNs], '']]
@@ -118,22 +121,22 @@ Resources:
       EnableKeyRotation: True
       KeyPolicy:
         Version: 2012-10-17
-        Id: DelegateAccessManagementToIAM
+        Id: KinesisStreamKeyPolicy
         Statement:
-          - Sid: Enable IAM User Permissions
+          - Sid: Allow access to key administrators
             Effect: Allow
             Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+              AWS: !Ref StreamEncryptionKeyAdminARNs
             Action: 'kms:*'
             Resource: '*'
-          - Sid: Permissions to decrypt
+          - Sid: Allow access to decrypt
             Effect: Allow
             Principal:
               AWS: !GetAtt OCSFTransformationLambdaExecutionRole.Arn
             Action:
               - kms:Decrypt
             Resource: '*'
-          - Sid: Permissions to generate data key
+          - Sid: Allow access to generate data key
             Effect: Allow
             Principal:
               AWS: !GetAtt KinesisAgentIAMRole.Arn
