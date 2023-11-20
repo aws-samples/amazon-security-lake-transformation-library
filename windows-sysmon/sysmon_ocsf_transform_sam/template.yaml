@@ -118,13 +118,27 @@ Resources:
       EnableKeyRotation: True
       KeyPolicy:
         Version: 2012-10-17
-        Id: key-default-1
+        Id: DelegateAccessManagementToIAM
         Statement:
           - Sid: Enable IAM User Permissions
             Effect: Allow
             Principal:
               AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
             Action: 'kms:*'
+            Resource: '*'
+          - Sid: Permissions to decrypt
+            Effect: Allow
+            Principal:
+              AWS: !GetAtt OCSFTransformationLambdaExecutionRole.Arn
+            Action:
+              - kms:Decrypt
+            Resource: '*'
+          - Sid: Permissions to generate data key
+            Effect: Allow
+            Principal:
+              AWS: !GetAtt KinesisAgentIAMRole.Arn
+            Action:
+              - kms:GenerateDataKey
             Resource: '*'
 
   LogCollectionStream:
