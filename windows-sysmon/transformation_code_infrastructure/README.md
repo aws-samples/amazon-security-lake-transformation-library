@@ -9,7 +9,7 @@ To use the SAM CLI, you need the following tools:
 
 This project contains the following files and folders:
 
-* `lambda`: This folder has the OCSF transformation Lambda function and its dependency list. The folder also contains the OCSF mapping configuration that the lambda function uses to perform the transformation.
+* `code`: This folder has the OCSF transformation Lambda function and its dependency list. The folder also contains the OCSF mapping configuration that the lambda function uses to perform the transformation.
 * `template.yaml`: The CloudFormation template that defines the AWS resources deployed to set up the log streaming and transformation infrastructure. The application uses several AWS resources, including Lambda functions and Kinesis Data Streams. You can update the template to add AWS resources through the same deployment process that updates your application code.
 * `samconfig.toml`: This file contains project level attributes for the SAM CLI.
 
@@ -27,11 +27,11 @@ The template produces the following outputs which you will use in the next steps
 
 ## Mapping configuration
 
-The OCSF transformation lambda function uses a [sysmon_mapping.json](./lambda/sysmon_mapping.json) file that specifies the OCSF schema each Sysmon event type should be transformed to and the mapping of Sysmon to OCSF attributes. The configuration is a sample and currently support events `1`, `5`, `11` & `23` but can easily be extended to handle additional types.
+The OCSF transformation lambda function uses a [sysmon_mapping.json](./code/sysmon_mapping.json) file that specifies the OCSF schema each Sysmon event type should be transformed to and the mapping of Sysmon to OCSF attributes. The configuration is a sample and currently support events `1`, `5`, `11` & `23` but can easily be extended to handle additional types.
 
 ## Deployment
 
-To build and deploy the application, run the following in your shell:
+To build and deploy the application, configure your shell to assume a role in the Security Lake delegated administrator account and run the following command:
 
 ```bash
 sam build
@@ -39,7 +39,7 @@ sam deploy --guided
 ```
 The application requires the following parameters as part of the deployment:
 
-* `ASLCustomLogSourceLocation`: The S3 location of the Amazon Security Lake custom log source used for outputting files in Parquet format (eg. my-bucket/ext/my-custom-log-source/).
+* `ASLCustomLogSourceLocation`: The S3 location of the Amazon Security Lake custom log source used for outputting files in Parquet format (eg. my-bucket/ext/my-custom-log-source).
 * `SourceKinesisUserARNs`: A list of ARNs of the users or roles that should be able to assume the IAM Role used by the Kinesis Agent to stream logs to Kinesis Data Streams.
 
 ## Cleanup

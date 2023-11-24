@@ -87,7 +87,7 @@ Resources:
                   - arn:aws:ec2:*:*:network-interface/*
                   - arn:aws:ec2:*:*:security-group/*
                   - arn:aws:ec2:*:*:instance/*
-              
+
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
