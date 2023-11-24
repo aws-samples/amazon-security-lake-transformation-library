@@ -25,7 +25,6 @@ f = open('sysmon_mapping.json')
 custom_source_mapping = json.load(f)
 
 def get_dot_locator_value(dot_locator, event):
-    # todo: validate locator
     if dot_locator.startswith('$.'):
         json_path = dot_locator.split('.')
         if json_path[1] == 'UserDefined':
