@@ -32,6 +32,7 @@ Resources:
   OCSFTransformationLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: OCSFTransformationLambdaExecutionRole
       Policies:
       - PolicyName: OCSFTransformationLambdaExecutionRolePolicy
         PolicyDocument:
@@ -49,12 +50,12 @@ Resources:
                 - kinesis:ListShards
                 - kinesis:ListStreams
                 - kinesis:SubscribeToShard
-              Resource: !GetAtt LogCollectionStream.Arn
+              Resource: '*'
             - Sid: KMSAccess
               Effect: Allow
               Action:
                 - kms:Decrypt
-              Resource: !GetAtt KinesisStreamKey.Arn
+              Resource: '*'
             - Sid: LogGroupCreate
               Effect: Allow
               Action:
@@ -93,7 +94,7 @@ Resources:
   OCSFTransformationLambdaFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: lambda/
+      CodeUri: code/
       Handler: app.lambda_handler
       Runtime: python3.10
       Tracing: Active
@@ -116,6 +117,9 @@ Resources:
 
   KinesisStreamKey:
     Type: AWS::KMS::Key
+    DependsOn:
+      - OCSFTransformationLambdaExecutionRole
+      - KinesisAgentIAMRole
     Properties:
       Enabled: True
       EnableKeyRotation: True
@@ -126,20 +130,20 @@ Resources:
           - Sid: Allow access to key administrators
             Effect: Allow
             Principal:
-              AWS: !Ref StreamEncryptionKeyAdminARNs
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
             Action: 'kms:*'
             Resource: '*'
           - Sid: Allow access to decrypt
             Effect: Allow
             Principal:
-              AWS: !GetAtt OCSFTransformationLambdaExecutionRole.Arn
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:role/OCSFTransformationLambdaExecutionRole'
             Action:
               - kms:Decrypt
             Resource: '*'
           - Sid: Allow access to generate data key
             Effect: Allow
             Principal:
-              AWS: !GetAtt KinesisAgentIAMRole.Arn
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:role/KinesisAgentIAMRole'
             Action:
               - kms:GenerateDataKey
             Resource: '*'
@@ -147,6 +151,7 @@ Resources:
   LogCollectionStream:
     Type: AWS::Kinesis::Stream
     Properties:
+      Name: windows-sysmon-raw-log-stream
       ShardCount: 1
       StreamEncryption:
         EncryptionType: KMS
@@ -167,12 +172,12 @@ Resources:
                 Action:
                   - kinesis:PutRecord
                   - kinesis:PutRecords
-                Resource: !GetAtt LogCollectionStream.Arn
+                Resource: '*'
               - Sid: KMSAccess
                 Effect: Allow
                 Action:
                   - kms:GenerateDataKey
-                Resource: !GetAtt KinesisStreamKey.Arn
+                Resource: '*'
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:

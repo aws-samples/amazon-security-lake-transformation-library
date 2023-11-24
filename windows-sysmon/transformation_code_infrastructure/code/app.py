@@ -22,9 +22,25 @@ payload_json = {}
 
 # Get config for mapping
 f = open('sysmon_mapping.json')
-sysmon_mapping = json.load(f)
+custom_source_mapping = json.load(f)
 
-def perform_transform(event_mapping, sysmon_event):
+def get_dot_locator_value(dot_locator, event):
+    # todo: validate locator
+    if dot_locator.startswith('$.'):
+        json_path = dot_locator.split('.')
+        if json_path[1] == 'UserDefined':
+            return event[json_path[2]]
+        json_path.pop(0)
+        result = {}
+        result = event
+        # iterater through nested values in the payload until we get the final value
+        for k in json_path:
+            result = result.get(k)
+        return str(result)
+    else:
+        logger.info("Unable to process matched field -"+dot_locator)
+
+def perform_transform(event_mapping, event):
     
     new_record = {}
     
@@ -32,36 +48,18 @@ def perform_transform(event_mapping, sysmon_event):
         # if we have a dict as the value we need to keep traversing until we reach a leaf
         if type(event_mapping[key]) is dict:
             if 'enum' in event_mapping[key]:
-                if isinstance(event_mapping[key]['enum']['evaluate'], str) and (event_mapping[key]['enum']['evaluate'].startswith('Event.')):
-                    json_path = event_mapping[key]['enum']['evaluate'].split('.')
-                    json_path.pop(0)
-                    results_dict = {}
-                    results_dict = sysmon_event
-                    # iterater through nested values in the payload until we get the final value
-                    for sysmon_key in json_path:
-                        results_dict = results_dict.get(sysmon_key)
-                    if results_dict in event_mapping[key]['enum']['values']:
-                        new_record[key] = event_mapping[key]['enum']['values'][results_dict]
+                if isinstance(event_mapping[key]['enum']['evaluate'], str) and (event_mapping[key]['enum']['evaluate'].startswith('$.')):
+                    value = get_dot_locator_value(event_mapping[key]['enum']['evaluate'], event)
+                    if value in event_mapping[key]['enum']['values']:
+                        new_record[key] = event_mapping[key]['enum']['values'][value]
                     else:
-                        new_record[key] = event_mapping[key]['enum']['values']['other']
+                        new_record[key] = event_mapping[key]['enum']['other']
             else:
-                new_record[key] = perform_transform(event_mapping[key], sysmon_event)
+                new_record[key] = perform_transform(event_mapping[key], event)
         else: # we have reached a leaf node
-            # if its a string and its using Event. dot notation
-            if isinstance(event_mapping[key], str) and (event_mapping[key].startswith('Event.')):
-                json_path = event_mapping[key].split('.')
-                json_path.pop(0)
-                results_dict = {}
-                results_dict = sysmon_event
-                # iterater through nested values in the payload until we get the final value
-                for sysmon_key in json_path:
-                    results_dict = results_dict.get(sysmon_key)
-                new_record[key] = str(results_dict)
-            # if its a string and its using Metadata. dot notation
-            elif isinstance(event_mapping[key], str) and (event_mapping[key].startswith('Metadata.')):
-                metadata_attribute = event_mapping[key].split('.')
-                metadata_attribute.pop(0)
-                new_record[key] = sysmon_event[metadata_attribute[0]]
+            # if its a string and we find a dot locator, get the field
+            if isinstance(event_mapping[key], str) and (event_mapping[key].startswith('$.')):
+                new_record[key] = get_dot_locator_value(event_mapping[key], event)
             else:
                 # otherwise just map it
                 new_record[key] = event_mapping[key]
@@ -86,23 +84,29 @@ def lambda_handler(event, context):
         logger.debug("Raw Sysmon event: "+str(payload))
 
         payload_json = json.loads(payload)
-        payload_json['EventId'] = str(payload_json['EventId'])
-
-        data = {}
-        for line in payload_json['Description'].split('\r\n'):
-            parts = line.split(': ', 1)  # Splitting by ': '
-            key = parts[0]
-            # If value is present, assign it to the key, otherwise assign an empty string
-            value = parts[1] if len(parts) > 1 else ""
-            data[key] = value
         
-        payload_json['Description'] = data
+        matched_value = get_dot_locator_value(custom_source_mapping['custom_source_events']['matched_field'], payload_json)
+        
+        logger.debug("Matched value: "+str(matched_value))
 
-        if payload_json['EventId'] in sysmon_mapping['sysmon_events']:
-            logger.debug("Found event mapping: "+str(sysmon_mapping['sysmon_events'][payload_json['EventId']]))
-            new_map = perform_transform(sysmon_mapping['sysmon_events'][payload_json['EventId']]['mapping'], payload_json)
+        # if its a windows-sysmon event then we need to tweak it to get it into json format
+        if custom_source_mapping['custom_source_events']['source_name'] == 'windows-sysmon':
+            data = {}
+            for line in payload_json['Description'].split('\r\n'):
+                parts = line.split(': ', 1)  # Splitting by ': '
+                key = parts[0]
+                # If value is present, assign it to the key, otherwise assign an empty string
+                value = parts[1] if len(parts) > 1 else ""
+                data[key] = value
+            payload_json['Description'] = data
+            
+        logger.debug(payload_json)
+
+        if matched_value in custom_source_mapping['custom_source_events']['ocsf_mapping']:
+            logger.debug("Found event mapping: "+str(custom_source_mapping['custom_source_events']['ocsf_mapping'][matched_value]))
+            new_map = perform_transform(custom_source_mapping['custom_source_events']['ocsf_mapping'][matched_value]['schema_mapping'], payload_json)
             new_schema = {}
-            new_schema['target_schema'] = sysmon_mapping['sysmon_events'][payload_json['EventId']]['schema']
+            new_schema['target_schema'] = custom_source_mapping['custom_source_events']['ocsf_mapping'][matched_value]['schema']
             new_schema['target_mapping'] = new_map
 
             logger.debug("Transformed OCSF record: "+str(new_schema))
