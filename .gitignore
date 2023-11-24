@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 .DS_Store
 .aws-sam
 .vscode
+=======
+git_excludes/*
+.DS_Store
+>>>>>>> 63aac3c (Adding transformation for windows-sysmon custom source)
