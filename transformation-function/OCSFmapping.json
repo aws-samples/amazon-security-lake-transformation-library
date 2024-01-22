@@ -1,0 +1,11 @@
+{ 
+        "custom_source_events": {
+            "source_name": "aws-network-firewall",
+            "matched_field": "$.event.event_type",
+            "ocsf_mapping": {
+                ...
+                ...
+                ...
+            }
+        }
+    }
