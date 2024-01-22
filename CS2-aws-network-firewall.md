@@ -300,6 +300,6 @@ Use AWS SAM CLi to deploy the transformation function and related infrastructure
 2. Navigate to **Crawlers** in the **Data Catalog** section. Search for the crawler associated with the custom source. It will have the same name as the custom source name. For example, `aws-network-firewall`. Select the check box next to the crawler name, then select **Edit Crawler** from the **Action** dropbox.
 3. Navigate to the **Set output and scheduling** section, select **Edit**. In the **Output configuration** section, select the **Advanced options** and select the checkbox for **Update all new and existing partitions with metadata from the table**.
 
-    [Update Glue Crawler config](/images/custom-sources/aws-network-firewall/anf_update_glue_table.jpg)
+    ![Update Glue Crawler config](./images/custom-sources/aws-network-firewall/anf_update_glue_table.jpg)
 
 4. You can choose to let the crawler run on a schedule or manually trigger the crawler once the ETL has been deployed and log streaming is configured.
