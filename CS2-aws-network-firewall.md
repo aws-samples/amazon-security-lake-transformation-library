@@ -251,7 +251,11 @@ The transformation function infrastructure deploys a staging S3 bucket for raw l
 
     The output of the command will reveal the attributes of the associated Glue resources along with Security Lake S3 bucket location and the associated IAM role ARN. Verify with sample output below:
 
+<<<<<<< HEAD
     ```json
+=======
+        ```json
+>>>>>>> e77c109 (V2)
     {
         "source": {
             "attributes": {
@@ -300,6 +304,10 @@ Use AWS SAM CLi to deploy the transformation function and related infrastructure
 2. Navigate to **Crawlers** in the **Data Catalog** section. Search for the crawler associated with the custom source. It will have the same name as the custom source name. For example, `aws-network-firewall`. Select the check box next to the crawler name, then select **Edit Crawler** from the **Action** dropbox.
 3. Navigate to the **Set output and scheduling** section, select **Edit**. In the **Output configuration** section, select the **Advanced options** and select the checkbox for **Update all new and existing partitions with metadata from the table**.
 
+<<<<<<< HEAD
     ![Update Glue Crawler config](./images/custom-sources/aws-network-firewall/anf_update_glue_table.jpg)
+=======
+    [Update Glue Crawler config](/images/custom-sources/aws-network-firewall/anf_update_glue_table.jpg)
+>>>>>>> e77c109 (V2)
 
 4. You can choose to let the crawler run on a schedule or manually trigger the crawler once the ETL has been deployed and log streaming is configured.

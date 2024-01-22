@@ -20,6 +20,9 @@ The OCSF project is a vendor-agnostic and open source standard that customers ca
     2. Configure permissions for the Security Lake administrator access by using an [AWS Identity and Access Management (IAM) role](https://aws.amazon.com/iam/). This role should be used by security teams to administer Security Lake configuration, including managing custom sources.
     3. Enable Security Lake in the Region of your choice in the Log Archive account. When you configure Security Lake, you can define your collection objectives, which include log sources, the Regions that you want to collect the log sources from and the lifecycle policy you want to assign to the log sources. Security Lake uses [Amazon Simple Storage Service (Amazon S3)](https://aws.amazon.com/s3/) as the underlying storage for the log data. S3 is an object storage service offering industry-leading scalability, data availability, security, and performance. S3 is built to store and retrieve any amount of data from anywhere. Security Lake creates and configures individual S3 buckets in each Region identified in the collection objectives, in the Log Archive account.
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e77c109 (V2)
 3. **Install AWS Serverless Application Model (SAM) command line interface (CLI)**. You will use AWS SAM CLI to deploy the infrastructure required to build the custom source ETL. Follow the AWS SAM development guide for steps to [install the AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html#install-sam-cli-instructions).
 
 ## Understanding the transformation library
@@ -31,10 +34,13 @@ The transformation function is a simple Lambda function that reads a mapping con
     "custom_source_events": {
         "source_name": "<custom-source-name>",
         "matched_field": "<log-attribute-matcher>",
+<<<<<<< HEAD
         "timestamp": {
             "field": "<timestamp-field-in-log>",
             "format": "%Y-%m-%d %H:%M:%S.%f | epoch"
         },
+=======
+>>>>>>> e77c109 (V2)
         "ocsf_mapping": {
             "<iterator>": {
             }
@@ -135,9 +141,12 @@ The above configuration will give relevant permissions to the Principals specifi
 
 See [CONTRIBUTING](./CONTRIBUTING.md) for more information.
 
+<<<<<<< HEAD
 =======
 
 ## Contributing
 
 See [CONTRIBUTING](./CONTRIBUTING.md) for more information.
 >>>>>>> 63aac3c (Adding transformation for windows-sysmon custom source)
+=======
+>>>>>>> e77c109 (V2)
