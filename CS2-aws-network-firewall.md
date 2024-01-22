@@ -251,7 +251,7 @@ The transformation function infrastructure deploys a staging S3 bucket for raw l
 
     The output of the command will reveal the attributes of the associated Glue resources along with Security Lake S3 bucket location and the associated IAM role ARN. Verify with sample output below:
 
-        ```json
+    ```json
     {
         "source": {
             "attributes": {
