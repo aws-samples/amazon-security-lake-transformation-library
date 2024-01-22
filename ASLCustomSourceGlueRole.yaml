@@ -5,9 +5,6 @@ Parameters:
   CustomSourceName:
     Type: String
     Description: Name of the custom source.
-  ASLCustomLogSourceLocation:
-    Type: String
-    Description: Amazon Security Lake (ASL) S3 bucket name with custom log location excluding the trailing slash (eg. my_bucket/ext/my_custom_source)
 
 Resources:
   CustomSourceGlueRole:
@@ -25,7 +22,7 @@ Resources:
                 Action:
                   - "s3:GetObject"
                   - "s3:PutObject"
-                Resource: !Sub 'arn:aws:s3:::${ASLCustomLogSourceLocation}/*'
+                Resource: arn:aws:s3:::aws-security-data-lake-*/ext/*
               - Sid: GlueServicePolicy
                 Effect: Allow
                 Action:

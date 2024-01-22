@@ -4,7 +4,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "sysmon-ocsf-transform-infrastructure"
+stack_name = "ocsf-transform-infrastructure"
 
 [default.build.parameters]
 cached = true
@@ -13,7 +13,7 @@ parallel = true
 [default.deploy.parameters]
 capabilities = "CAPABILITY_NAMED_IAM"
 resolve_s3 = true
-s3_prefix = "sysmon-ocsf-transform-infrastructure"
+s3_prefix = "ocsf-transform-infrastructure"
 image_repositories = []
 
 [default.validate.parameters]
