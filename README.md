@@ -30,6 +30,10 @@ The transformation function is a simple Lambda function that reads a mapping con
     "custom_source_events": {
         "source_name": "<custom-source-name>",
         "matched_field": "<log-attribute-matcher>",
+        "timestamp": {
+            "field": "<timestamp-field-in-log>",
+            "format": "%Y-%m-%d %H:%M:%S.%f | epoch"
+        },
         "ocsf_mapping": {
             "<iterator>": {
             }
