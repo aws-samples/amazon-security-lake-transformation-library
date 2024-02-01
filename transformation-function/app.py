@@ -10,16 +10,9 @@ import awswrangler as wr
 from io import BytesIO
 from datetime import datetime
 
-<<<<<<< HEAD
 SEC_LAKE_BUCKET = os.environ['SEC_LAKE_BUCKET']
 
 # configure logging
-=======
-# Consider overrides for account_id and region
-SEC_LAKE_BUCKET = os.environ['SEC_LAKE_BUCKET']
-
-# Configure logging
->>>>>>> e77c109 (V2)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -27,38 +20,19 @@ if os.environ['DEBUG'].lower() == 'true':
     logger.setLevel(logging.DEBUG)
 
 logger.info('Loading function')
-<<<<<<< HEAD
 
 # get config for mapping
 mapping_config = open('OCSFmapping.json')
 custom_source_mapping = json.load(mapping_config)
 
 # check if multiple schema matches in mapping
-=======
-payload_json = {}
-schemas = []
-
-# Get config for mapping
-mapping_config = open('OCSFmapping.json')
-custom_source_mapping = json.load(mapping_config)
-
-# check if there are multiple schema matches in mapping
->>>>>>> e77c109 (V2)
 schemas = []
 for k in custom_source_mapping['custom_source_events']['ocsf_mapping'].keys():
     schemas.append(custom_source_mapping['custom_source_events']['ocsf_mapping'][k]['schema'])
 
-<<<<<<< HEAD
 MULTISCHEMA = True if (len(set(schemas)) > 1) else False
 
 # function to return eventday format from user-specified timestamp found in logs
-=======
-MULTISCHEMA = False
-
-if (len(set(schemas)) > 1):
-    MULTISCHEMA = True
-
->>>>>>> e77c109 (V2)
 def timestamp_transform(timestamp, format):
     if format == 'epoch':
         dt_event = datetime.fromtimestamp(int(timestamp))
@@ -69,10 +43,7 @@ def timestamp_transform(timestamp, format):
         eventday = str(dt_event.year)+f'{dt_event.month:02d}'+f'{dt_event.day:02d}'
         return eventday
 
-<<<<<<< HEAD
 # function to return value from '$.' reference in config line
-=======
->>>>>>> e77c109 (V2)
 def get_dot_locator_value(dot_locator, event):
     if dot_locator.startswith('$.'):
         json_path = dot_locator.split('.')
@@ -81,37 +52,19 @@ def get_dot_locator_value(dot_locator, event):
         json_path.pop(0)
         result = {}
         result = event
-<<<<<<< HEAD
         for k in json_path:
             if result.get(k) is not None:
                 result = result.get(k)
             else: # if we get None then reference doesnt exist and we need to break out
                 result = None
                 break
-=======
-        # Iterator through nested values in the payload until we get the final value
-        for k in json_path:
-            if result.get(k) is not None:
-                result = result.get(k)
-            else:
-                result = None
-                break
-
->>>>>>> e77c109 (V2)
         return str(result)
     else:
         logger.info("Unable to process matched field -"+dot_locator)
 
-<<<<<<< HEAD
 # function to map original log record to mapping defined in config file
 def perform_transform(event_mapping, event):
     new_record = {}
-=======
-def perform_transform(event_mapping, event):
-    
-    new_record = {}
-    
->>>>>>> e77c109 (V2)
     for key in event_mapping.keys():
         # if we have a dict as the value we need to keep traversing until we reach a leaf
         if type(event_mapping[key]) is dict:
@@ -125,11 +78,7 @@ def perform_transform(event_mapping, event):
             else:
                 new_record[key] = perform_transform(event_mapping[key], event)
         else: # we have reached a leaf node
-<<<<<<< HEAD
             # get the field if dot locator
-=======
-            # if its a string and we find a dot locator, get the field
->>>>>>> e77c109 (V2)
             if isinstance(event_mapping[key], str) and (event_mapping[key].startswith('$.')):
                 locator_value = get_dot_locator_value(event_mapping[key], event)
                 if locator_value is not None:
@@ -140,19 +89,13 @@ def perform_transform(event_mapping, event):
                 
     return new_record
 
-<<<<<<< HEAD
 # function to process event if received from S3
-=======
->>>>>>> e77c109 (V2)
 def process_s3_event(record):
 
     logger.info('Processing S3 event')
     mapped_events = []
     unmapped_events = []
-<<<<<<< HEAD
     payload_json = {}
-=======
->>>>>>> e77c109 (V2)
 
     message = json.loads(record['body'])
     s3_details = message['Records'][0]['s3']
@@ -167,15 +110,9 @@ def process_s3_event(record):
         Key=object_key
     )
 
-<<<<<<< HEAD
     log_file=gzip.GzipFile(
         None,
         'rb',
-=======
-    log_file=gzip.GzipFile(              # read in the output of gzip -d
-        None,                           # just return output as BytesIO
-        'rb',                           # read binary
->>>>>>> e77c109 (V2)
         fileobj=BytesIO(response['Body'].read()))
 
     for line in log_file:
@@ -183,12 +120,7 @@ def process_s3_event(record):
         logger.debug("Raw log: "+str(line.decode("utf-8")))
         payload_json = json.loads(line.decode("utf-8"))
         
-<<<<<<< HEAD
         # save timestamp information
-=======
-        # set our partition from timestamp in record
-        # TODO: could just collapse this into one line
->>>>>>> e77c109 (V2)
         partition = {}
         partition['timestamp'] = get_dot_locator_value(custom_source_mapping['custom_source_events']['timestamp']['field'], payload_json)
         partition['format'] = custom_source_mapping['custom_source_events']['timestamp']['format']
@@ -218,17 +150,13 @@ def process_s3_event(record):
 
     return mapped_events, unmapped_events
 
-<<<<<<< HEAD
 # function to process event if received from Kinesis
-=======
->>>>>>> e77c109 (V2)
 def process_kinesis_event(record):
 
     logger.info('Processing Kinesis event')
 
     mapped_events = []
     unmapped_events = []
-<<<<<<< HEAD
     payload_json = {}
 
     payload = base64.b64decode(record['kinesis']['data']).decode('utf-8')
@@ -236,17 +164,6 @@ def process_kinesis_event(record):
     payload_json = json.loads(payload)
 
     matched_value = get_dot_locator_value(custom_source_mapping['custom_source_events']['matched_field'], payload_json)
-=======
-
-    payload = base64.b64decode(record['kinesis']['data']).decode('utf-8')
-
-    logger.debug("Raw log: "+str(payload))
-
-    payload_json = json.loads(payload)
-
-    matched_value = get_dot_locator_value(custom_source_mapping['custom_source_events']['matched_field'], payload_json)
-    
->>>>>>> e77c109 (V2)
     logger.debug("Matched value: "+str(matched_value))
 
     # if its a windows-sysmon event then we need to tweak it to get it into json format
@@ -262,12 +179,7 @@ def process_kinesis_event(record):
 
     logger.debug(payload_json)
     
-<<<<<<< HEAD
     # save timestamp information
-=======
-    # set our partition from timestamp in record
-    # TODO: could just collapse this into one line
->>>>>>> e77c109 (V2)
     partition = {}
     partition['timestamp'] = get_dot_locator_value(custom_source_mapping['custom_source_events']['timestamp']['field'], payload_json)
     partition['format'] = custom_source_mapping['custom_source_events']['timestamp']['format']
@@ -294,11 +206,7 @@ def process_kinesis_event(record):
     return mapped_events, unmapped_events
 
 def lambda_handler(event, context):
-<<<<<<< HEAD
     
-=======
-    # get the account id and region of this lambda
->>>>>>> e77c109 (V2)
     aws_account_id = context.invoked_function_arn.split(":")[4]
     aws_region = context.invoked_function_arn.split(":")[3]
 
@@ -307,19 +215,11 @@ def lambda_handler(event, context):
 
     for record in event['Records']:
         logger.info('Record eventSource: '+record['eventSource'])
-<<<<<<< HEAD
-=======
-
->>>>>>> e77c109 (V2)
         if record['eventSource'] == 'aws:kinesis':
             logger.info('Record eventID: '+record['eventID'])
             mapped, unmapped = process_kinesis_event(record)
             logger.debug(mapped)
             logger.debug(unmapped)
-<<<<<<< HEAD
-=======
-
->>>>>>> e77c109 (V2)
             mapped_events.extend(mapped)
             unmapped_events.extend(unmapped)
         elif record['eventSource'] == 'aws:sqs':
@@ -327,28 +227,15 @@ def lambda_handler(event, context):
             mapped, unmapped = process_s3_event(record)
             logger.debug(mapped)
             logger.debug(unmapped)
-<<<<<<< HEAD
-=======
-
->>>>>>> e77c109 (V2)
             mapped_events.extend(mapped)
             unmapped_events.extend(unmapped)
         else:
             logger.info("Event source not supported.")
 
     if mapped_events:
-<<<<<<< HEAD
         df = pd.DataFrame(mapped_events)
         # we may have records that cut across partitions
         df_eventdays = df['eventday'].unique()
-=======
-        
-        df = pd.DataFrame(mapped_events)
-        
-        # we may have records that cut across partitions
-        df_eventdays = df['eventday'].unique()
-        
->>>>>>> e77c109 (V2)
         # so for each eventday, get the schemas for that day only and write them to the partition
         for eventday in df_eventdays:
             df_filtered = (df[df['eventday']==eventday])
