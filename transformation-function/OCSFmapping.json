@@ -2,6 +2,10 @@
         "custom_source_events": {
             "source_name": "aws-network-firewall",
             "matched_field": "$.event.event_type",
+            "timestamp": {
+                "field": "$.Description.UtcTime",
+                "format": "%Y-%m-%d %H:%M:%S.%f"
+            },
             "ocsf_mapping": {
                 ...
                 ...
