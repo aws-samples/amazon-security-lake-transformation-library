@@ -87,7 +87,7 @@ To capture raw logs from AWS Network Firewall, you will configure [Network Firew
 
 Copy the configuration json below and replace the contents of the [transformation-function/OCSFmapping.json](./transformation-function/OCSFmapping.json) file.
 
-    ```json
+```json
     { 
         "custom_source_events": {
             "source_name": "aws-network-firewall",
@@ -213,7 +213,7 @@ Copy the configuration json below and replace the contents of the [transformatio
             }
         }
     }
-    ```
+```
 
 #### Configure Network Firewall to send logs to staging S3 bucket
 
