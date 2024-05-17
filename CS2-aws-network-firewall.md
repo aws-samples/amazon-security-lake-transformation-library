@@ -102,7 +102,7 @@ Copy the configuration json below and replace the contents of the [transformatio
                     "schema_mapping": {   
                         "metadata": {
                             "profiles": "cloud,firewall",
-                            "version": "v1.0.0",
+                            "version": "v1.1.0",
                             "product" : {
                                 "name": "AWS Network Firewall",
                                 "vendor_name": "AWS",
@@ -162,7 +162,7 @@ Copy the configuration json below and replace the contents of the [transformatio
                     "schema_mapping": {   
                         "metadata": {
                             "profiles": "cloud,firewall",
-                            "version": "v1.0.0",
+                            "version": "v1.1.0",
                             "product" : {
                                 "name": "AWS Network Firewall",
                                 "vendor_name": "AWS",
