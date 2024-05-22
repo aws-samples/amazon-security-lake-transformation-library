@@ -20,7 +20,7 @@ Parameters:
   ASLCustomLogSourceLocation:
     Type: String
     AllowedPattern: ".+"
-    Description: Amazon Security Lake (ASL) custom source S3 location excluding the trailing slash (eg. my_bucket/ext/my_custom_source).
+    Description: Amazon Security Lake custom source S3 location excluding the trailing slash (eg. my_bucket/ext/my_custom_source).
 
   RawLogS3BucketName:
     Type: String

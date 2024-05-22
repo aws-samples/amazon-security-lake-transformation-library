@@ -102,7 +102,7 @@ Copy the configuration json below and replace the contents of the [transformatio
                     "schema_mapping": {   
                         "metadata": {
                             "profiles": "cloud,firewall",
-                            "version": "v1.0.0",
+                            "version": "v1.1.0",
                             "product" : {
                                 "name": "AWS Network Firewall",
                                 "vendor_name": "AWS",
@@ -162,7 +162,7 @@ Copy the configuration json below and replace the contents of the [transformatio
                     "schema_mapping": {   
                         "metadata": {
                             "profiles": "cloud,firewall",
-                            "version": "v1.0.0",
+                            "version": "v1.1.0",
                             "product" : {
                                 "name": "AWS Network Firewall",
                                 "vendor_name": "AWS",
@@ -226,7 +226,7 @@ The transformation function infrastructure deploys a staging S3 bucket for raw l
 1. Set up the Glue IAM role for the custom resource by deploying the `ASLCustomSourceGlueRole.yaml` CloudFormation template. The template requires the following inputs:
     
     * `CustomSourceName`: This is the name of the custom source you want to add in Security Lake.
-    * `ASLCustomLogSourceLocation`: Amazon Security Lake (ASL) S3 bucket name with custom log location without the trailing slash (eg. my_bucket/ext/my_custom_source)
+    * `ASLCustomLogSourceLocation`: Amazon Security Lake S3 bucket name with custom log location without the trailing slash (eg. my_bucket/ext/my_custom_source)
 
     The template produces one output, `CustomSourceGlueRoleARN`, which is the ARN of the IAM role created for Glue to use with custom sources.
     
