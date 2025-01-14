@@ -32,6 +32,11 @@ for k in custom_source_mapping['custom_source_events']['ocsf_mapping'].keys():
 
 MULTISCHEMA = True if (len(set(schemas)) > 1) else False
 
+# function to return type_uid based on activity_id and class_uid
+def type_uid_calculation(activity_id, class_uid):
+    type_uid = ((int(class_uid) * 100) + int(activity_id))
+    return type_uid
+
 # function to return eventday format from user-specified timestamp found in logs
 def timestamp_transform(timestamp, format):
     if format == 'epoch':
@@ -86,7 +91,8 @@ def perform_transform(event_mapping, event):
             else:
                 # otherwise just map it
                 new_record[key] = event_mapping[key]
-                
+
+    new_record["type_uid"] = type_uid_calculation(new_record["activity_id"], new_record["class_uid"])
     return new_record
 
 # function to process event if received from S3
