@@ -188,7 +188,6 @@ Copy the configuration json below and replace the contents of the [transformatio
                         "category_name": "System Activity",
                         "class_uid": 1007,
                         "class_name": "Process Activity",
-                        "type_uid": 100701,
                         "time": "$.Description.UtcTime",
                         "activity_id": {
                             "enum": {
@@ -243,7 +242,6 @@ Copy the configuration json below and replace the contents of the [transformatio
                         "category_name": "System Activity",
                         "class_uid": 1001,
                         "class_name": "File Activity",
-                        "type_uid": 100101,
                         "time": "$.Description.UtcTime",
                         "activity_id": {
                             "enum": {

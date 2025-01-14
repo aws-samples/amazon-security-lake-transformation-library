@@ -65,6 +65,11 @@ for source in sources_config['sources']:
     except ImportError as e:
         logger.warning(f"Could not import preprocessor for {source['name']}: {e}")
 
+# function to return type_uid based on activity_id and class_uid
+def type_uid_calculation(activity_id, class_uid):
+    type_uid = ((int(class_uid) * 100) + int(activity_id))
+    return type_uid
+
 # function to return eventday format from user-specified timestamp found in logs
 def timestamp_transform(timestamp, format):
     if format == 'epoch':
@@ -125,6 +130,7 @@ def perform_transform(event_mapping, event):
                 else:
                     # otherwise just map it
                     new_record[key] = event_mapping[key]
+                    new_record["type_uid"] = type_uid_calculation(new_record["activity_id"], new_record["class_uid"])
         except Exception as e:
             # Catch any errors during transformation of this field and continue
             logger.warning(f"Error transforming field {key}: {str(e)}, setting to null")
