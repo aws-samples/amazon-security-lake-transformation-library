@@ -118,7 +118,6 @@ Copy the configuration json below and replace the contents of the [transformatio
                         "category_name": "Network Activity",
                         "class_uid": 4001,
                         "class_name": "Network Activity",
-                        "type_uid": 400106,
                         "activity_id": 6,
                         "activity_name": "Traffic",
                         "dst_endpoint": {
