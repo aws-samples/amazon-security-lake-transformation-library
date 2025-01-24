@@ -24,7 +24,6 @@ logger.info('Loading function')
 # get config for mapping
 mapping_config = open('OCSFmapping.json')
 custom_source_mapping = json.load(mapping_config)
-
 # check if multiple schema matches in mapping
 schemas = []
 for k in custom_source_mapping['custom_source_events']['ocsf_mapping'].keys():
@@ -89,6 +88,44 @@ def perform_transform(event_mapping, event):
                 
     return new_record
 
+# function to process data coming from cloudwatch (using subscription filters)
+def process_cloudwatch_events(cwevent):
+    logger.info('Processing Cloudwatch event')
+    mapped_events = []
+    unmapped_events = []
+    payload_json = {}
+    for event in cwevent["logEvents"]:
+        logger.debug("Raw log: "+str(event["message"]))
+        payload_json = json.loads(event["message"])
+
+        # save timestamp information
+        partition = {}
+        partition['timestamp'] = get_dot_locator_value(custom_source_mapping['custom_source_events']['timestamp']['field'], payload_json)
+        partition['format'] = custom_source_mapping['custom_source_events']['timestamp']['format']
+        partition['eventday'] = timestamp_transform(partition['timestamp'], partition['format'])
+        
+        logger.debug("Eventday: "+str(partition['eventday']))
+        matched_value = get_dot_locator_value(custom_source_mapping['custom_source_events']['matched_field'], payload_json)
+
+        logger.debug("Matched value: "+str(matched_value))
+
+        if matched_value in custom_source_mapping['custom_source_events']['ocsf_mapping']:
+            new_map = perform_transform(custom_source_mapping['custom_source_events']['ocsf_mapping'][matched_value]['schema_mapping'], payload_json)
+            new_schema = {}
+            new_schema['target_schema'] = custom_source_mapping['custom_source_events']['ocsf_mapping'][matched_value]['schema']
+            new_schema['target_mapping'] = new_map
+            new_schema['eventday'] = partition['eventday']
+
+            logger.debug("Transformed OCSF record: "+str(new_schema))
+
+            mapped_events.append(new_schema)
+
+        else:
+            logger.info("Found unmapped event: " + matched_value)
+            unmapped_events.append(payload_json)
+
+    return mapped_events, unmapped_events
+
 # function to process event if received from S3
 def process_s3_event(record):
 
@@ -145,7 +182,7 @@ def process_s3_event(record):
             mapped_events.append(new_schema)
 
         else:
-            logger.info("Found unmapped event")
+            logger.info("Found unmapped event: "+matched_value)
             unmapped_events.append(payload_json)
 
     return mapped_events, unmapped_events
@@ -200,7 +237,7 @@ def process_kinesis_event(record):
         mapped_events.append(new_schema)
 
     else:
-        logger.info("Found unmapped event")
+        logger.info("Found unmapped event: "+matched_value)
         unmapped_events.append(payload_json)
 
     return mapped_events, unmapped_events
@@ -213,24 +250,33 @@ def lambda_handler(event, context):
     mapped_events = []
     unmapped_events = []
 
-    for record in event['Records']:
-        logger.info('Record eventSource: '+record['eventSource'])
-        if record['eventSource'] == 'aws:kinesis':
-            logger.info('Record eventID: '+record['eventID'])
-            mapped, unmapped = process_kinesis_event(record)
-            logger.debug(mapped)
-            logger.debug(unmapped)
-            mapped_events.extend(mapped)
-            unmapped_events.extend(unmapped)
-        elif record['eventSource'] == 'aws:sqs':
-            logger.info('Record messageId: '+record['messageId'])
-            mapped, unmapped = process_s3_event(record)
-            logger.debug(mapped)
-            logger.debug(unmapped)
-            mapped_events.extend(mapped)
-            unmapped_events.extend(unmapped)
-        else:
-            logger.info("Event source not supported.")
+    if "Records" in event:
+        for record in event['Records']:
+            logger.info('Record eventSource: '+record['eventSource'])
+            if record['eventSource'] == 'aws:kinesis':
+                logger.info('Record eventID: '+record['eventID'])
+                mapped, unmapped = process_kinesis_event(record)
+                logger.debug(mapped)
+                logger.debug(unmapped)
+                mapped_events.extend(mapped)
+                unmapped_events.extend(unmapped)
+            elif record['eventSource'] == 'aws:sqs':
+                logger.info('Record messageId: '+record['messageId'])
+                mapped, unmapped = process_s3_event(record)
+                logger.debug(mapped)
+                logger.debug(unmapped)
+                mapped_events.extend(mapped)
+                unmapped_events.extend(unmapped)
+            else:
+                logger.info("Event source not supported.")
+    elif "logEvents" in event:
+        '''ADDING Cloudwatch capabilities'''
+        logger.info('Cloudwatch logGroup' + event['logGroup'] + ' logStream'+event['logStream'])
+        mapped, unmapped = process_cloudwatch_events(event)
+        logger.debug(mapped)
+        logger.debug(unmapped)
+        mapped_events.extend(mapped)   
+        unmapped_events.extend(unmapped)         
 
     if mapped_events:
         df = pd.DataFrame(mapped_events)
@@ -261,6 +307,6 @@ def lambda_handler(event, context):
         
         logger.info('Dropping {} unmapped records.'.format(len(unmapped_events)))
 
-    logger.info('Successfully processed {} records.'.format(len(event['Records'])))
+    logger.info('Successfully processed {} records.'.format(len(mapped_events)))
 
     return
