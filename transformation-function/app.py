@@ -382,9 +382,9 @@ def lambda_handler(event, context):
             
             # Create appropriate S3 path based on multi-schema setting
             if MULTISCHEMA_SOURCES.get(source, False):
-                s3_url = f's3://{SEC_LAKE_BUCKET}/{source}/{schema.upper()}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
+                s3_url = f's3://{SEC_LAKE_BUCKET}/ext/{source}/{schema.upper()}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
             else:
-                s3_url = f's3://{SEC_LAKE_BUCKET}/{source}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
+                s3_url = f's3://{SEC_LAKE_BUCKET}/ext/{source}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
             
             logger.info(f"Writing {len(df_map)} transformed events to: {s3_url}")
             wr.s3.to_parquet(

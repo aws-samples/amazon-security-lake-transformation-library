@@ -1,310 +1,232 @@
 { 
     "custom_source_events": {
-        "source_name": "alb-logs",
-        "matched_field": "$.type",
+        "source_name": "windows-sysmon",
+        "matched_field": "$.EventId",
         "timestamp": {
-            "field": "$.time",
-            "format": "%Y-%m-%dT%H:%M:%S.%fZ"
+            "field": "$.Description.UtcTime",
+            "format": "%Y-%m-%d %H:%M:%S.%f"
         },
         "ocsf_mapping": {
-            "http": {
-                "schema": "http_activity",
+            "1": {
+                "schema": "process_activity",
                 "schema_mapping": {   
                     "metadata": {
-                        "profiles": "cloud,loadbalancing",
-                        "version": "v1.1.0",
+                        "profiles": "host",
+                        "version": "v1.0.0",
                         "product" : {
-                            "name": "AWS ELB",
-                            "vendor_name": "AWS",
-                            "feature": {
-                                "name": "Application Load Balancer"
-                            },
-                            "uid": "$.elb"
+                            "name": "System Monitor (Sysmon)",
+                            "vendor_name": "Microsoft Sysinternals",
+                            "version": "v15.0"
                         }
                     },
-                    "app_name": "$.elb",
                     "severity": "Informational",
                     "severity_id": 1,
-                    "category_uid": 4,
-                    "category_name": "Network Activity",
-                    "class_uid": 4002,
-                    "class_name": "HTTP Activity",
+                    "category_uid": 1,
+                    "category_name": "System Activity",
+                    "class_uid": 1007,
+                    "class_name": "Process Activity",
+                    "type_uid": 100701,
+                    "time": "$.Description.UtcTime",
                     "activity_id": {
                         "enum": {
-                            "evaluate": "$.request_method",
+                            "evaluate": "$.EventId",
                             "values": {
-                                "CONNECT": 1,
-                                "DELETE": 2,
-                                "GET": 3,
-                                "HEAD": 4,
-                                "OPTIONS": 5,
-                                "POST": 6,
-                                "PUT": 7,
-                                "TRACE": 8
+                                "1": 1,
+                                "5": 2,
+                                "7": 3,
+                                "10": 3,
+                                "19": 3,
+                                "20": 3,
+                                "21": 3,
+                                "25": 4
                             },
                             "other": 99
                         }
                     },
-                    "activity_name": "$.request_method",
-                    "http_request":{
-                        "http_method": "$.request_method",
-                        "user_agent": "$.user_agent",
-                        "url": {
-                            "hostname": "$.domain_name",
-                            "url_string": "$.request_url",
-                            "scheme": "$.type"
-                        }
+                    "actor": {
+                        "process": "$.Description.Image"
                     },
-                    "http_response":{
-                        "code": "$.elb_status_code"
+                    "device": {
+                        "type_id": 6,
+                        "instance_uid": "$.UserDefined.source_instance_id"
                     },
-                    "connection_info": {
-                        "direction_id": 1,
-                        "protocol_ver_id": 4,
-                        "protocol_name": "tcp",
-                        "protocol_num": 6
-                    },
-                    "dst_endpoint": {
-                        "hostname": "$.target_group_arn",
-                        "ip": "$.target_ip",
-                        "port": "$.target_port",
-                        "type": "Virtual",
-                        "type_id": 6
-                    },
-                    "duration": "$.request_processing_time",
-                    "src_endpoint": {
-                        "ip": "$.client_ip",
-                        "port": "$.client_port"
-                    },
-                    "time": "$.time",
-                    "start_time": "$.request_creation_time",
-                    "traffic": {
-                        "bytes_in": "$.received_bytes",
-                        "bytes_out": "$.sent_bytes"
-                    },
-                    "tls": {
-                        "certificate": "$.chosen_cert_arn",
-                        "cipher": "$.ssl_cipher",
-                        "sni": "$.domain_name",
-                        "version": "$.ssl_protocol"
+                    "process": {
+                        "pid": "$.Description.ProcessId",
+                        "uid": "$.Description.ProcessGuid",
+                        "name": "$.Description.Image",
+                        "user": "$.Description.User",
+                        "loaded_modules": "$.Description.ImageLoaded"
                     },
                     "unmapped": {
-                        "target_processing_time": "$.target_processing_time",
-                        "response_processing_time": "$.response_processing_time",
-                        "target_status_code": "$.target_status_code",
-                        "matched_rule_priority": "$.matched_rule_priority",
-                        "actions_executed": "$.actions_executed",
-                        "redirect_url": "$.redirect_url",
-                        "error_reason": "$.error_reason",
-                        "target_ip_list": "$.target_ip_list",
-                        "target_port_list": "$.target_port_list",
-                        "target_status_code_list": "$.target_status_code_list",
-                        "classification": "$.classification",
-                        "classification_reason": "$.classification_reason",
-                        "trace_id": "$.trace_id",
-                        "conn_trace_id": "$.conn_trace_id",
-                        "request_protocol": "$.request_protocol"
+                        "rulename": "$.Description.RuleName"
+                    } 
+                }
+            },
+            "5": {
+                "schema": "process_activity",
+                "schema_mapping": {   
+                    "metadata": {
+                        "profiles": "host",
+                        "version": "v1.0.0",
+                        "product" : {
+                            "name": "System Monitor (Sysmon)",
+                            "vendor_name": "Microsoft Sysinternals",
+                            "version": "v15.0"
+                        }
+                    },
+                    "severity": "Informational",
+                    "severity_id": 1,
+                    "category_uid": 1,
+                    "category_name": "System Activity",
+                    "class_uid": 1007,
+                    "class_name": "Process Activity",
+                    "type_uid": 100701,
+                    "time": "$.Description.UtcTime",
+                    "activity_id": {
+                        "enum": {
+                            "evaluate": "$.EventId",
+                            "values": {
+                                "1": 1,
+                                "5": 2,
+                                "7": 3,
+                                "10": 3,
+                                "19": 3,
+                                "20": 3,
+                                "21": 3,
+                                "25": 4
+                            },
+                            "other": 99
+                        }
+                    },
+                    "actor": {
+                        "process": "$.Description.Image"
+                    },
+                    "device": {
+                        "type_id": 6,
+                        "instance_uid": "$.source_instance_id"
+                    },
+                    "process": {
+                        "pid": "$.Description.ProcessId",
+                        "uid": "$.Description.ProcessGuid",
+                        "name": "$.Description.Image",
+                        "user": "$.Description.User",
+                        "loaded_modules": "$.Description.ImageLoaded"
+                    },
+                    "unmapped": {
+                        "rulename": "$.Description.RuleName"
                     }   
                 }
             },
-            "https": {
-                "schema": "http_activity",
+            "11": {
+                "schema": "file_activity",
                 "schema_mapping": {   
                     "metadata": {
-                        "profiles": "cloud,loadbalancing",
-                        "version": "v1.1.0",
+                        "profiles": "host",
+                        "version": "v1.0.0",
                         "product" : {
-                            "name": "AWS ELB",
-                            "vendor_name": "AWS",
-                            "feature": {
-                                "name": "Application Load Balancer"
-                            },
-                            "uid": "$.elb"
+                            "name": "System Monitor (Sysmon)",
+                            "vendor_name": "Microsoft Sysinternals",
+                            "version": "v15.0"
                         }
                     },
-                    "app_name": "$.elb",
                     "severity": "Informational",
                     "severity_id": 1,
-                    "category_uid": 4,
-                    "category_name": "Network Activity",
-                    "class_uid": 4002,
-                    "class_name": "HTTP Activity",
+                    "category_uid": 1,
+                    "category_name": "System Activity",
+                    "class_uid": 1001,
+                    "class_name": "File Activity",
+                    "type_uid": 100101,
+                    "time": "$.Description.UtcTime",
                     "activity_id": {
                         "enum": {
-                            "evaluate": "$.request_method",
+                            "evaluate": "$.EventId",
                             "values": {
-                                "CONNECT": 1,
-                                "DELETE": 2,
-                                "GET": 3,
-                                "HEAD": 4,
-                                "OPTIONS": 5,
-                                "POST": 6,
-                                "PUT": 7,
-                                "TRACE": 8
+                                "2": 6,
+                                "11": 1,
+                                "15": 1,
+                                "24": 3,
+                                "23": 4
                             },
                             "other": 99
                         }
                     },
-                    "activity_name": "$.request_method",
-                    "http_request":{
-                        "http_method": "$.request_method",
-                        "user_agent": "$.user_agent",
-                        "url": {
-                            "hostname": "$.domain_name",
-                            "url_string": "$.request_url",
-                            "scheme": "$.type"
-                        }
+                    "actor": {
+                        "process": "$.Description.Image"
                     },
-                    "http_response":{
-                        "code": "$.elb_status_code"
+                    "device": {
+                        "type_id": 6,
+                        "instance_uid": "$.source_instance_id"
                     },
-                    "connection_info": {
-                        "direction_id": 1,
-                        "protocol_ver_id": 4,
-                        "protocol_name": "tcp",
-                        "protocol_num": 6
-                    },
-                    "dst_endpoint": {
-                        "hostname": "$.target_group_arn",
-                        "ip": "$.target_ip",
-                        "port": "$.target_port",
-                        "type": "Virtual",
-                        "type_id": 6
-                    },
-                    "duration": "$.request_processing_time",
-                    "src_endpoint": {
-                        "ip": "$.client_ip",
-                        "port": "$.client_port"
-                    },
-                    "time": "$.time",
-                    "start_time": "$.request_creation_time",
-                    "traffic": {
-                        "bytes_in": "$.received_bytes",
-                        "bytes_out": "$.sent_bytes"
-                    },
-                    "tls": {
-                        "certificate": "$.chosen_cert_arn",
-                        "cipher": "$.ssl_cipher",
-                        "sni": "$.domain_name",
-                        "version": "$.ssl_protocol"
+                    "file": {
+                        "name": "$.Description.TargetFilename",
+                        "type_uid": 1
                     },
                     "unmapped": {
-                        "target_processing_time": "$.target_processing_time",
-                        "response_processing_time": "$.response_processing_time",
-                        "target_status_code": "$.target_status_code",
-                        "matched_rule_priority": "$.matched_rule_priority",
-                        "actions_executed": "$.actions_executed",
-                        "redirect_url": "$.redirect_url",
-                        "error_reason": "$.error_reason",
-                        "target_ip_list": "$.target_ip_list",
-                        "target_port_list": "$.target_port_list",
-                        "target_status_code_list": "$.target_status_code_list",
-                        "classification": "$.classification",
-                        "classification_reason": "$.classification_reason",
-                        "trace_id": "$.trace_id",
-                        "conn_trace_id": "$.conn_trace_id",
-                        "request_protocol": "$.request_protocol"
-                    }   
+                        "rulename": "$.Description.RuleName",
+                        "creation_utc_time": "$.Description.CreationUtcTime",
+                        "process": {
+                            "pid": "$.Description.ProcessId",
+                            "uid": "$.Description.ProcessGuid",
+                            "name": "$.Description.Image",
+                            "user": "$.Description.User"
+                        }
+                    } 
                 }
             },
-            "h2": {
-                "schema": "http_activity",
+            "23": {
+                "schema": "file_activity",
                 "schema_mapping": {   
                     "metadata": {
-                        "profiles": "cloud,loadbalancing",
-                        "version": "v1.1.0",
+                        "profiles": "host",
+                        "version": "v1.0.0",
                         "product" : {
-                            "name": "AWS ELB",
-                            "vendor_name": "AWS",
-                            "feature": {
-                                "name": "Application Load Balancer"
-                            },
-                            "uid": "$.elb"
+                            "name": "System Monitor (Sysmon)",
+                            "vendor_name": "Microsoft Sysinternals",
+                            "version": "v15.0"
                         }
                     },
-                    "app_name": "$.elb",
                     "severity": "Informational",
                     "severity_id": 1,
-                    "category_uid": 4,
-                    "category_name": "Network Activity",
-                    "class_uid": 4002,
-                    "class_name": "HTTP Activity",
+                    "category_uid": 1,
+                    "category_name": "System Activity",
+                    "class_uid": 1001,
+                    "class_name": "File Activity",
+                    "type_uid": 100101,
+                    "time": "$.Description.UtcTime",
                     "activity_id": {
                         "enum": {
-                            "evaluate": "$.request_method",
+                            "evaluate": "$.EventId",
                             "values": {
-                                "CONNECT": 1,
-                                "DELETE": 2,
-                                "GET": 3,
-                                "HEAD": 4,
-                                "OPTIONS": 5,
-                                "POST": 6,
-                                "PUT": 7,
-                                "TRACE": 8
+                                "2": 6,
+                                "11": 1,
+                                "15": 1,
+                                "24": 3,
+                                "23": 4
                             },
                             "other": 99
                         }
                     },
-                    "activity_name": "$.request_method",
-                    "http_request":{
-                        "http_method": "$.request_method",
-                        "user_agent": "$.user_agent",
-                        "url": {
-                            "hostname": "$.domain_name",
-                            "url_string": "$.request_url",
-                            "scheme": "$.type"
-                        }
+                    "actor": {
+                        "process": "$.Description.Image"
                     },
-                    "http_response":{
-                        "code": "$.elb_status_code"
+                    "device": {
+                        "type_id": 6,
+                        "instance_uid": "$.source_instance_id"
                     },
-                    "connection_info": {
-                        "direction_id": 1,
-                        "protocol_ver_id": 4,
-                        "protocol_name": "tcp",
-                        "protocol_num": 6
-                    },
-                    "dst_endpoint": {
-                        "hostname": "$.target_group_arn",
-                        "ip": "$.target_ip",
-                        "port": "$.target_port",
-                        "type": "Virtual",
-                        "type_id": 6
-                    },
-                    "duration": "$.request_processing_time",
-                    "src_endpoint": {
-                        "ip": "$.client_ip",
-                        "port": "$.client_port"
-                    },
-                    "time": "$.time",
-                    "start_time": "$.request_creation_time",
-                    "traffic": {
-                        "bytes_in": "$.received_bytes",
-                        "bytes_out": "$.sent_bytes"
-                    },
-                    "tls": {
-                        "certificate": "$.chosen_cert_arn",
-                        "cipher": "$.ssl_cipher",
-                        "sni": "$.domain_name",
-                        "version": "$.ssl_protocol"
+                    "file": {
+                        "name": "$.Description.TargetFilename",
+                        "type_uid": 1
                     },
                     "unmapped": {
-                        "target_processing_time": "$.target_processing_time",
-                        "response_processing_time": "$.response_processing_time",
-                        "target_status_code": "$.target_status_code",
-                        "matched_rule_priority": "$.matched_rule_priority",
-                        "actions_executed": "$.actions_executed",
-                        "redirect_url": "$.redirect_url",
-                        "error_reason": "$.error_reason",
-                        "target_ip_list": "$.target_ip_list",
-                        "target_port_list": "$.target_port_list",
-                        "target_status_code_list": "$.target_status_code_list",
-                        "classification": "$.classification",
-                        "classification_reason": "$.classification_reason",
-                        "trace_id": "$.trace_id",
-                        "conn_trace_id": "$.conn_trace_id",
-                        "request_protocol": "$.request_protocol"
-                    }   
+                        "rulename": "$.Description.RuleName",
+                        "creation_utc_time": "$.Description.CreationUtcTime",
+                        "process": {
+                            "pid": "$.Description.ProcessId",
+                            "uid": "$.Description.ProcessGuid",
+                            "name": "$.Description.Image",
+                            "user": "$.Description.User"
+                        }
+                    } 
                 }
             }
         }
