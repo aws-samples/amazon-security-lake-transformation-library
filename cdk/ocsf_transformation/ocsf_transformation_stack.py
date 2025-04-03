@@ -327,6 +327,7 @@ class OcsfTransformationStack(Stack):
             role=transformation_lambda_role,
             tracing=lambda_.Tracing.ACTIVE,
             reserved_concurrent_executions=10,
+            timeout=Duration.seconds(10),
             environment={
                 "SEC_LAKE_BUCKET": asl_bucket_location,
                 "DEBUG": "false"
