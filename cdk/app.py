@@ -9,6 +9,7 @@ app = cdk.App()
 log_event_source = app.node.try_get_context("log_event_source") or os.environ.get("LOG_EVENT_SOURCE", "Both")
 asl_bucket_location = app.node.try_get_context("asl_bucket_location") or os.environ.get("ASL_BUCKET_LOCATION")
 raw_log_s3_bucket_name = app.node.try_get_context("raw_log_s3_bucket_name") or os.environ.get("RAW_LOG_S3_BUCKET_NAME", "")
+add_s3_event_notification = app.node.try_get_context("add_s3_event_notification") or os.environ.get("ADD_S3_EVENT_NOTIFICATION", False)
 
 # Parse list parameters (comma-separated strings)
 kinesis_user_arns_str = app.node.try_get_context("kinesis_user_arns") or os.environ.get("KINESIS_USER_ARNS", "")
@@ -35,6 +36,7 @@ OcsfTransformationStack(
     raw_log_s3_bucket_name=raw_log_s3_bucket_name,
     kinesis_user_arns=kinesis_user_arns,
     kinesis_encryption_key_admin_arns=kinesis_encryption_key_admin_arns,
+    add_s3_event_notification=add_s3_event_notification,
     env=cdk.Environment(
         account=os.environ.get("CDK_DEFAULT_ACCOUNT"), 
         region=os.environ.get("CDK_DEFAULT_REGION")

@@ -24,6 +24,7 @@ class OcsfTransformationStack(Stack):
         raw_log_s3_bucket_name = kwargs.pop("raw_log_s3_bucket_name", None)
         kinesis_user_arns = kwargs.pop("kinesis_user_arns", [])
         kinesis_encryption_key_admin_arns = kwargs.pop("kinesis_encryption_key_admin_arns", [])
+        add_s3_event_notification = kwargs.pop("add_s3_event_notification", False)
         
         super().__init__(scope, construct_id, **kwargs)
 
@@ -182,6 +183,14 @@ class OcsfTransformationStack(Stack):
                     self, "ExistingRawLogBucket", 
                     bucket_name=raw_log_s3_bucket_name
                 )
+                if add_s3_event_notification:
+                    # Add S3 notification for SQS
+                    log_bucket.add_event_notification(
+                        s3.EventType.OBJECT_CREATED_PUT,
+                        s3n.SqsDestination(sqs_queue),
+                        s3.NotificationKeyFilter(suffix=".log.gz")
+                    )
+
 
             # Add S3-specific policies to the Lambda role
             transformation_lambda_role.add_to_policy(
