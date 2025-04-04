@@ -373,18 +373,15 @@ def lambda_handler(event, context):
 
     if mapped_events:
         df = pd.DataFrame(mapped_events)
-        # Group by source, schema, and eventday for proper partitioning
-        source_groups = df.groupby(['source', 'target_schema', 'eventday'])
+        # Group by source and eventday only (not by schema)
+        source_groups = df.groupby(['source', 'eventday'])
         
-        for (source, schema, eventday), group in source_groups:
-            # Extract just the target_mapping column
+        for (source, eventday), group in source_groups:
+            # Extract just the target_mapping column and add schema as a column
             df_map = pd.json_normalize(group['target_mapping'], max_level=0)
             
-            # Create appropriate S3 path based on multi-schema setting
-            if MULTISCHEMA_SOURCES.get(source, False):
-                s3_url = f's3://{SEC_LAKE_BUCKET}/ext/{source}/{schema.upper()}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
-            else:
-                s3_url = f's3://{SEC_LAKE_BUCKET}/ext/{source}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
+            # Write all schemas to the same location
+            s3_url = f's3://{SEC_LAKE_BUCKET}/ext/{source}/region={aws_region}/accountId={aws_account_id}/eventDay={eventday}/{uuid.uuid4().hex}.gz.parquet'
             
             logger.info(f"Writing {len(df_map)} transformed events to: {s3_url}")
             wr.s3.to_parquet(
