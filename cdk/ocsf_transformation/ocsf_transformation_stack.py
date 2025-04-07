@@ -19,18 +19,19 @@ from constructs import Construct
 class OcsfTransformationStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         # Extract our custom properties from kwargs
-        log_event_source = kwargs.pop("log_event_source", "Both")
+        log_event_source = kwargs.pop("log_event_source", "ALL")
         asl_bucket_location = kwargs.pop("asl_bucket_location")
         raw_log_s3_bucket_name = kwargs.pop("raw_log_s3_bucket_name", None)
         kinesis_user_arns = kwargs.pop("kinesis_user_arns", [])
         kinesis_encryption_key_admin_arns = kwargs.pop("kinesis_encryption_key_admin_arns", [])
         add_s3_event_notification = kwargs.pop("add_s3_event_notification", False)
+        lowercase_stack_name = self.stack_name.lower()
         
         super().__init__(scope, construct_id, **kwargs)
 
         # Define conditions like in the SAM template
-        is_s3_backed = log_event_source in ["S3Bucket", "Both"]
-        is_kinesis_backed = log_event_source in ["KinesisDataStream", "Both"]
+        is_s3_backed = log_event_source in ["S3Bucket", "ALL"]
+        is_kinesis_backed = log_event_source in ["KinesisDataStream", "ALL"]
         create_kinesis_agent_role = is_kinesis_backed and len(kinesis_user_arns) > 0
         create_staging_s3_bucket = is_s3_backed and not raw_log_s3_bucket_name
 
@@ -38,7 +39,7 @@ class OcsfTransformationStack(Stack):
         # Always use the unified role ID regardless of deployment type
         transformation_lambda_role = iam.Role(
             self, "TransformationLambdaExecutionRole",
-            role_name=f"{self.stack_name}-LambdaExecutionRole",
+            role_name=f"{lowercase_stack_name}-LambdaExecutionRole",
             assumed_by=iam.ServicePrincipal("lambda.amazonaws.com")
         )
         
@@ -134,10 +135,12 @@ class OcsfTransformationStack(Stack):
             # Create or use existing S3 bucket
             if create_staging_s3_bucket:
                 # Create a new bucket
+                staging_log_bucket_name=f"{lowercase_stack_name}-staging-log-bucket"
                 staging_log_bucket = s3.Bucket(
                     self, "StagingLogBucket",
-                    bucket_name=f"{self.stack_name}-staging-log-bucket",
-                    removal_policy=RemovalPolicy.RETAIN
+                    bucket_name=staging_log_bucket_name.lower(),
+                    removal_policy=RemovalPolicy.RETAIN,
+                    enforce_ssl=True
                 )
                 # Ensure S3 bucket has the same logical ID as in the SAM template
                 (staging_log_bucket.node.default_child).override_logical_id("StagingLogBucket")
@@ -221,7 +224,7 @@ class OcsfTransformationStack(Stack):
             if create_kinesis_agent_role:
                 kinesis_agent_role = iam.Role(
                     self, "KinesisAgentIAMRole",
-                    role_name=f"{self.stack_name}-KinesisAgentRole",
+                    role_name=f"{lowercase_stack_name}-KinesisAgentRole",
                     assumed_by=iam.CompositePrincipal(
                         *[iam.ArnPrincipal(arn) for arn in kinesis_user_arns]
                     )
@@ -274,7 +277,7 @@ class OcsfTransformationStack(Stack):
                     iam.PolicyStatement(
                         sid="Allow access to decrypt",
                         effect=iam.Effect.ALLOW,
-                        principals=[iam.ArnPrincipal(f"arn:aws:iam::{self.account}:role/{self.stack_name}-LambdaExecutionRole")],
+                        principals=[iam.ArnPrincipal(f"arn:aws:iam::{self.account}:role/{lowercase_stack_name}-LambdaExecutionRole")],
                         actions=["kms:Decrypt"],
                         resources=["*"]
                     )
@@ -311,7 +314,7 @@ class OcsfTransformationStack(Stack):
                         iam.PolicyStatement(
                             sid="Allow access to generate data key",
                             effect=iam.Effect.ALLOW,
-                            principals=[iam.ArnPrincipal(f"arn:aws:iam::{self.account}:role/{self.stack_name}-KinesisAgentRole")],
+                            principals=[iam.ArnPrincipal(f"arn:aws:iam::{self.account}:role/{lowercase_stack_name}-KinesisAgentRole")],
                             actions=["kms:GenerateDataKey"],
                             resources=["*"]
                         )
