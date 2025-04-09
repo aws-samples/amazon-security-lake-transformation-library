@@ -284,21 +284,16 @@ class OcsfTransformationStack(Stack):
                         resources=["*"]
                     ),
                 ]
-
-                # Tell CloudFormation to keep the existing key as-is
-                existing_key = CfnResource(
-                    self, "ExistingKey",
-                    type="AWS::KMS::Key"
-                )
-                existing_key.override_logical_id("KinesisStreamKey")  # Use the existing logical ID
-                existing_key.cfn_options.deletion_policy = CfnDeletionPolicy.RETAIN  # Use CfnDeletionPolicy instead of RemovalPolicy
                 
-                # Create the KMS key with policy
+                # Create the KMS key to represent the existing resource in the stack
                 kinesis_stream_key = kms.Key(
-                    self, "NewKinesisStreamKey",
+                    self, "KinesisStreamKey",
                     enable_key_rotation=True,
                     policy=iam.PolicyDocument(statements=policy_statements)
                 )
+
+                # Use the same logical ID as in the SAM template
+                (kinesis_stream_key.node.default_child).override_logical_id("KinesisStreamKey")
 
                 kinesis_stream_key.grant_decrypt(transformation_lambda_role)
                 
