@@ -6,7 +6,7 @@ from ocsf_transformation.ocsf_transformation_stack import OcsfTransformationStac
 app = cdk.App()
 
 # Get parameters from context or environment variables
-log_event_source = app.node.try_get_context("log_event_source") or os.environ.get("LOG_EVENT_SOURCE", "Both")
+log_event_source = app.node.try_get_context("log_event_source") or os.environ.get("LOG_EVENT_SOURCE", "All")
 asl_bucket_location = app.node.try_get_context("asl_bucket_location") or os.environ.get("ASL_BUCKET_LOCATION")
 raw_log_s3_bucket_name = app.node.try_get_context("raw_log_s3_bucket_name") or os.environ.get("RAW_LOG_S3_BUCKET_NAME", "")
 add_s3_event_notification = app.node.try_get_context("add_s3_event_notification") or os.environ.get("ADD_S3_EVENT_NOTIFICATION", False)
@@ -28,7 +28,7 @@ stack_name = (
 
 # Create stack with parameters
 OcsfTransformationStack(
-    app, 
+    app,
     "OcsfTransformationStack",  # This is just the construct ID, not the actual stack name
     stack_name=stack_name,     # This is the actual CloudFormation stack name
     log_event_source=log_event_source,

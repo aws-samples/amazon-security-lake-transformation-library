@@ -1,34 +1,9 @@
-# More information about the configuration file can be found here:
-# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-config.html
 version = 0.1
-
-[default]
-[default.global.parameters]
-stack_name = "ocsf-transform-infrastructure"
-
-[default.build.parameters]
-cached = true
-parallel = true
-
 [default.deploy.parameters]
-capabilities = "CAPABILITY_NAMED_IAM"
+stack_name = "ocsf-infra-3"
 resolve_s3 = true
-s3_prefix = "ocsf-transform-infrastructure"
-image_repositories = []
+s3_prefix = "ocsf-infra-3"
 region = "ap-southeast-2"
-parameter_overrides = "LogEventSource=\"Both\" ASLBucketName=\"aws-security-data-lake-ap-southeast-2-uab87sjpgm1cam97ylvaw6ras\" RawLogS3BucketName=\"ocsf-transform-infrastructure-s3-staging-log-bucket\" KinesisUserARNs=\"arn:aws:iam::837460776723:role/Cloud9Admin\" KinesisStreamEncryptionKeyAdminARNs=\"\""
-
-[default.validate.parameters]
-lint = true
-
-[default.package.parameters]
-resolve_s3 = true
-
-[default.sync.parameters]
-watch = true
-
-[default.local_start_api.parameters]
-warm_containers = "EAGER"
-
-[default.local_start_lambda.parameters]
-warm_containers = "EAGER"
+capabilities = "CAPABILITY_NAMED_IAM"
+parameter_overrides = "LogEventSource=\"KinesisDataStream\" ASLCustomLogSourceLocation=\"aws-security-data-lake-ap-southeast-2-uab87sjpgm1cam97ylvaw6ras/ext/windows-sysmon\" RawLogS3BucketName=\"\" KinesisUserARNs=\"arn:aws:iam::837460776723:role/Cloud9Admin\" KinesisStreamEncryptionKeyAdminARNs=\"arn:aws:iam::837460776723:role/aws-reserved/sso.amazonaws.com/ap-southeast-2/AWSReservedSSO_AWSAdministratorAccess_d9181b0bad57f338\""
+image_repositories = []

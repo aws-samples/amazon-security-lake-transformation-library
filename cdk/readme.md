@@ -56,7 +56,7 @@ You can provide parameters in different ways:
 ```bash
 cdk deploy \
   --context log_event_source=Both \
-  --context asl_bucket_location=my_bucket/ext/my_custom_source \
+  --context asl_bucket_location=my_bucket \
   --context raw_log_s3_bucket_name=my-existing-bucket \
   --context add_s3_event_notification=true \
   --context kinesis_user_arns="arn:aws:iam::123456789012:user/kinesis-user1,arn:aws:iam::123456789012:user/kinesis-user2" \
@@ -68,7 +68,7 @@ cdk deploy \
 
 ```bash
 export LOG_EVENT_SOURCE=Both
-export ASL_BUCKET_LOCATION=my_bucket/ext/my_custom_source
+export ASL_BUCKET_LOCATION=my_bucket
 export RAW_LOG_S3_BUCKET_NAME=my-existing-bucket
 export ADD_S3_EVENT_NOTIFICATION=true
 export KINESIS_USER_ARNS="arn:aws:iam::123456789012:user/kinesis-user1,arn:aws:iam::123456789012:user/kinesis-user2"

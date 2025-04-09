@@ -15,13 +15,12 @@ Parameters:
     AllowedValues:
       - S3Bucket
       - KinesisDataStream
-      - Both
     Description: Source of raw logs for the custom source.
 
-  ASLBucketName:
+  ASLCustomLogSourceLocation:
     Type: String
     AllowedPattern: ".+"
-    Description: The name of the Amazon Security Lake (ASL) S3 bucket.
+    Description: Amazon Security Lake (ASL) custom source S3 location excluding the trailing slash (eg. my_bucket/ext/my_custom_source).
 
   RawLogS3BucketName:
     Type: String
@@ -36,66 +35,22 @@ Parameters:
     Description: ARNs of IAM identities that administer the CMK used for Kinesis stream encryption, please include the user that deploys the SAM package.
 
 Conditions:
-  CreateStagingS3Bucket: !Equals [!Ref RawLogS3BucketName, '']
+  IsS3Backed: !Equals [ !Ref LogEventSource, 'S3Bucket' ]
+  IsKinesisBacked: !Equals [ !Ref LogEventSource, 'KinesisDataStream' ]
+  CreateKinesisAgentRole: !And [ !Equals [ !Ref LogEventSource, 'KinesisDataStream' ], !Not [!Equals [!Join ['', !Ref KinesisUserARNs], '']]]
+  CreateKinesisCMK: !And [ !Equals [ !Ref LogEventSource, 'KinesisDataStream' ], !Not [!Equals [!Join ['', !Ref KinesisStreamEncryptionKeyAdminARNs], '']]]
+  UseAWSManagedKinesisKey: !And [ !Equals [ !Ref LogEventSource, 'KinesisDataStream' ], !Equals [!Join ['', !Ref KinesisStreamEncryptionKeyAdminARNs], '']]
+  CreateStagingS3Bucket: !And [ !Equals [ !Ref LogEventSource, 'S3Bucket' ], !Equals [!Ref RawLogS3BucketName, '']]
 
 Resources:
-  KinesisAgentIAMRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Join ['',[ !Ref AWS::StackName, '-KinesisAgentRole' ]]
-      Policies:
-      - PolicyName: KinesisAgentIAMPolicy
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
-              - Sid: KinesisWrite
-                Effect: Allow
-                Action:
-                  - kinesis:PutRecord
-                  - kinesis:PutRecords
-                Resource: '*'
-              - Sid: KMSAccess
-                Effect: Allow
-                Action:
-                  - kms:GenerateDataKey
-                Resource: '*'
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Ref KinesisUserARNs
-            Action:
-              - sts:AssumeRole
 
-  SqsQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      VisibilityTimeout: 1200
-
-  SQSQueuePolicy:
-    Type: AWS::SQS::QueuePolicy
-    Properties:
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: "s3.amazonaws.com"
-            Action: sqs:SendMessage
-            Resource: !GetAtt SqsQueue.Arn
-            Condition:
-              ArnLike:
-                aws:SourceArn: !If [ CreateStagingS3Bucket, !Join ['',['arn:aws:s3:::', !Ref AWS::StackName, '-staging-log-bucket' ]], !Join ['',['arn:aws:s3:::', !Ref RawLogS3BucketName]]]
-      Queues:
-        - Ref: SqsQueue
-
-  TransformationLambdaExecutionRole:
+  KinesisBackedTransformationLambdaExecutionRole:
+    Condition: IsKinesisBacked
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Join ['',[ !Ref AWS::StackName, '-KinesisLambdaExecutionRole' ]]
       Policies:
-      - PolicyName: TransformationLambdaExecutionRolePolicy
+      - PolicyName: KinesisBackedTransformationLambdaExecutionRolePolicy
         PolicyDocument:
           Version: 2012-10-17
           Statement:
@@ -133,7 +88,7 @@ Resources:
               Action:
                 - s3:PutObject
                 - s3:PutObjectAcl
-              Resource: !Sub 'arn:aws:s3:::${ASLBucketName}/*'
+              Resource: !Sub 'arn:aws:s3:::${ASLCustomLogSourceLocation}/*'
             - Sid: TracingWithXRay
               Effect: Allow
               Action:
@@ -143,48 +98,6 @@ Resources:
                 - xray:GetSamplingTargets
                 - xray:GetSamplingStatisticSummaries
               Resource: '*'
-      - PolicyName: S3BackedTransformationLambdaExecutionRolePolicy
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
-            - Sid: S3Read
-              Effect: Allow
-              Action:
-                - s3:GetObject*
-              Resource: !If [ CreateStagingS3Bucket, !Join ['',['arn:aws:s3:::', !Ref AWS::StackName, '-staging-log-bucket', '/*' ]], !Join ['',['arn:aws:s3:::', !Ref RawLogS3BucketName, '/*']]]
-            - Sid: LogGroupCreate
-              Effect: Allow
-              Action:
-                - logs:CreateLogGroup
-              Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
-            - Sid: LogsWrite
-              Effect: Allow
-              Action:
-                - logs:CreateLogStream
-                - logs:PutLogEvents
-              Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:*'
-            - Sid: S3Write
-              Effect: Allow
-              Action:
-                - s3:PutObject
-                - s3:PutObjectAcl
-              Resource: !Sub 'arn:aws:s3:::${ASLBucketName}/*'
-            - Sid: TracingWithXRay
-              Effect: Allow
-              Action:
-                - xray:PutTraceSegments
-                - xray:PutTelemetryRecords
-                - xray:GetSamplingRules
-                - xray:GetSamplingTargets
-                - xray:GetSamplingStatisticSummaries
-              Resource: '*'
-            - Sid: SQSTrigger
-              Effect: Allow
-              Action:
-                - sqs:DeleteMessage
-                - sqs:GetQueueAttributes
-                - sqs:ReceiveMessage
-              Resource: !GetAtt SqsQueue.Arn
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -194,10 +107,61 @@ Resources:
             Action:
               - sts:AssumeRole
 
+  CMKEncryptedKinesisBackedTransformationLambdaFunction:
+    Condition: CreateKinesisCMK
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ./transformation-function/
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      Tracing: Active
+      ReservedConcurrentExecutions: 10
+      Role: !GetAtt KinesisBackedTransformationLambdaExecutionRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:336392948345:layer:AWSSDKPandas-Python310:5'
+      Environment:
+        Variables:
+          SEC_LAKE_BUCKET:
+            Ref: ASLCustomLogSourceLocation
+          DEBUG: false
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt CMKEncryptedLogCollectionStream.Arn
+            BatchSize: 100
+            StartingPosition: LATEST
+
+  KinesisBackedTransformationLambdaFunction:
+    Condition: UseAWSManagedKinesisKey
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ./transformation-function/
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      Tracing: Active
+      ReservedConcurrentExecutions: 10
+      Role: !GetAtt KinesisBackedTransformationLambdaExecutionRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:336392948345:layer:AWSSDKPandas-Python310:5'
+      Environment:
+        Variables:
+          SEC_LAKE_BUCKET:
+            Ref: ASLCustomLogSourceLocation
+          DEBUG: false
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt LogCollectionStream.Arn
+            BatchSize: 100
+            StartingPosition: LATEST
+
   KinesisStreamKey:
+    Condition: CreateKinesisCMK
     Type: AWS::KMS::Key
     DependsOn:
-      - TransformationLambdaExecutionRole
+      - KinesisBackedTransformationLambdaExecutionRole
       - KinesisAgentIAMRole
     Properties:
       Enabled: True
@@ -211,6 +175,26 @@ Resources:
             Principal:
               AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
             Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow access to key administrators
+            Effect: Allow
+            Principal:
+              AWS: !Ref KinesisStreamEncryptionKeyAdminARNs
+            Action:
+              - kms:Create*
+              - kms:Describe*
+              - kms:Enable*
+              - kms:List*
+              - kms:Put*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Disable*
+              - kms:Get*
+              - kms:Delete*
+              - kms:TagResource
+              - kms:UntagResource
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
             Resource: '*'
           - Sid: Allow access to decrypt
             Effect: Allow
@@ -228,6 +212,7 @@ Resources:
             Resource: '*'
 
   CMKEncryptedLogCollectionStream:
+    Condition: CreateKinesisCMK
     Type: AWS::Kinesis::Stream
     Properties:
       ShardCount: 1
@@ -235,34 +220,68 @@ Resources:
         EncryptionType: KMS
         KeyId: !Ref KinesisStreamKey
 
-  TransformationLambdaFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  LogCollectionStream:
+    Condition: UseAWSManagedKinesisKey
+    Type: AWS::Kinesis::Stream
     Properties:
-      CodeUri: ./transformation-function/
-      Handler: app.lambda_handler
-      Runtime: python3.10
-      Tracing: Active
-      ReservedConcurrentExecutions: 10
-      Role: !GetAtt TransformationLambdaExecutionRole.Arn
-      Layers:
-        - !Sub 'arn:aws:lambda:${AWS::Region}:336392948345:layer:AWSSDKPandas-Python310:5'
-      Environment:
-        Variables:
-          SEC_LAKE_BUCKET:
-            Ref: ASLBucketName
-          DEBUG: false
-      Events:
-        Stream:
-          Type: Kinesis
-          Properties:
-            Stream: !GetAtt CMKEncryptedLogCollectionStream.Arn
-            BatchSize: 100
-            StartingPosition: LATEST
-        SQSEventTrigger:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt SqsQueue.Arn
-            BatchSize: 10
+      ShardCount: 1
+      StreamEncryption:
+        EncryptionType: KMS
+        KeyId: alias/aws/kinesis
+
+  KinesisAgentIAMRole:
+    Condition: CreateKinesisAgentRole
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ['',[ !Ref AWS::StackName, '-KinesisAgentRole' ]]
+      Policies:
+      - PolicyName: KinesisAgentIAMPolicy
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+              - Sid: KinesisWrite
+                Effect: Allow
+                Action:
+                  - kinesis:PutRecord
+                  - kinesis:PutRecords
+                Resource: '*'
+              - Sid: KMSAccess
+                Effect: Allow
+                Action:
+                  - kms:GenerateDataKey
+                Resource: '*'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Ref KinesisUserARNs
+            Action:
+              - sts:AssumeRole
+
+  SqsQueue:
+    Condition: IsS3Backed
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 1200
+
+  SQSQueuePolicy:
+    Condition: IsS3Backed
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: "s3.amazonaws.com"
+            Action: sqs:SendMessage
+            Resource: !GetAtt SqsQueue.Arn
+            Condition:
+              ArnLike:
+                aws:SourceArn: !If [ CreateStagingS3Bucket, !Join ['',['arn:aws:s3:::', !Ref AWS::StackName, '-staging-log-bucket' ]], !Join ['',['arn:aws:s3:::', !Ref RawLogS3BucketName]]]
+      Queues:
+        - Ref: SqsQueue
 
   StagingLogBucket:
     Condition: CreateStagingS3Bucket
@@ -305,3 +324,121 @@ Resources:
             Resource: !Sub 'arn:aws:s3:::${StagingLogBucket}'
             Principal:
               Service: delivery.logs.amazonaws.com
+
+  S3BackedTransformationLambdaExecutionRole:
+    Condition: IsS3Backed
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ['',[ !Ref AWS::StackName, '-S3LambdaExecutionRole' ]]
+      Policies:
+      - PolicyName: S3BackedTransformationLambdaExecutionRolePolicy
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Sid: S3Read
+              Effect: Allow
+              Action:
+                - s3:GetObject*
+              Resource: !If [ CreateStagingS3Bucket, !Join ['',['arn:aws:s3:::', !Ref AWS::StackName, '-staging-log-bucket', '/*' ]], !Join ['',['arn:aws:s3:::', !Ref RawLogS3BucketName, '/*']]]
+            - Sid: LogGroupCreate
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+              Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+            - Sid: LogsWrite
+              Effect: Allow
+              Action:
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:*'
+            - Sid: S3Write
+              Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectAcl
+              Resource: !Sub 'arn:aws:s3:::${ASLCustomLogSourceLocation}/*'
+            - Sid: TracingWithXRay
+              Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+                - xray:GetSamplingRules
+                - xray:GetSamplingTargets
+                - xray:GetSamplingStatisticSummaries
+              Resource: '*'
+            - Sid: SQSTrigger
+              Effect: Allow
+              Action:
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:ReceiveMessage
+              Resource: !GetAtt SqsQueue.Arn
+
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  S3BackedTransformationLambdaFunction:
+    Condition: IsS3Backed
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ./transformation-function/
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      Tracing: Active
+      ReservedConcurrentExecutions: 10
+      Role: !GetAtt S3BackedTransformationLambdaExecutionRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:336392948345:layer:AWSSDKPandas-Python310:5'
+      Environment:
+        Variables:
+          SEC_LAKE_BUCKET:
+            Ref: ASLCustomLogSourceLocation
+          DEBUG: false
+      Events:
+        SQSEventTrigger:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SqsQueue.Arn
+            BatchSize: 10
+
+Outputs:
+  KinesisBackedTransformationLambdaFunctionARN:
+    Condition: UseAWSManagedKinesisKey
+    Description: OCSF Transformation Lambda Function ARN
+    Value: !GetAtt KinesisBackedTransformationLambdaFunction.Arn
+
+  CMKEncryptedKinesisBackedTransformationLambdaFunction:
+    Condition: CreateKinesisCMK
+    Description: OCSF Transformation Lambda Function ARN
+    Value: !GetAtt CMKEncryptedKinesisBackedTransformationLambdaFunction.Arn
+
+  S3BackedTransformationLambdaFunctionARN:
+    Condition: IsS3Backed
+    Description: OCSF Transformation Lambda Function ARN
+    Value: !GetAtt S3BackedTransformationLambdaFunction.Arn
+
+  StagingLogBucketARN:
+    Condition: CreateStagingS3Bucket
+    Description: Name of the bucket for temporary log storage.
+    Value: !GetAtt StagingLogBucket.Arn
+
+  CMKEncryptedLogCollectionStreamName:
+    Condition: CreateKinesisCMK
+    Description: Name of the log collection Kinesis Stream
+    Value: !Ref CMKEncryptedLogCollectionStream
+
+  LogCollectionStreamName:
+    Condition: UseAWSManagedKinesisKey
+    Description: Name of the log collection Kinesis Stream
+    Value: !Ref LogCollectionStream
+
+  KinesisAgentIAMRoleARN:
+    Condition: CreateKinesisAgentRole
+    Description: ARN of the IAM role created for Kinesis agent to assume for log streaming.
+    Value: !GetAtt KinesisAgentIAMRole.Arn

@@ -14,12 +14,13 @@ from aws_cdk import (
     CfnResource,
 )
 from constructs import Construct
+from aws_cdk import CfnDeletionPolicy
 
 
 class OcsfTransformationStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         # Extract our custom properties from kwargs
-        log_event_source = kwargs.pop("log_event_source", "Both")
+        log_event_source = kwargs.pop("log_event_source", "All")
         asl_bucket_location = kwargs.pop("asl_bucket_location")
         raw_log_s3_bucket_name = kwargs.pop("raw_log_s3_bucket_name", None)
         kinesis_user_arns = kwargs.pop("kinesis_user_arns", [])
@@ -29,8 +30,8 @@ class OcsfTransformationStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Define conditions like in the SAM template
-        is_s3_backed = log_event_source in ["S3Bucket", "Both"]
-        is_kinesis_backed = log_event_source in ["KinesisDataStream", "Both"]
+        is_s3_backed = log_event_source in ["S3Bucket", "All"]
+        is_kinesis_backed = log_event_source in ["KinesisDataStream", "All"]
         create_kinesis_agent_role = is_kinesis_backed and len(kinesis_user_arns) > 0
         create_staging_s3_bucket = is_s3_backed and not raw_log_s3_bucket_name
 
@@ -136,7 +137,7 @@ class OcsfTransformationStack(Stack):
                 # Create a new bucket
                 staging_log_bucket = s3.Bucket(
                     self, "StagingLogBucket",
-                    bucket_name=f"{self.stack_name}-staging-log-bucket",
+                    bucket_name=f"{self.stack_name.lower()}-staging-log-bucket",
                     removal_policy=RemovalPolicy.RETAIN
                 )
                 # Ensure S3 bucket has the same logical ID as in the SAM template
@@ -261,28 +262,16 @@ class OcsfTransformationStack(Stack):
                 # Use the same logical ID as in the SAM template
                 (log_collection_stream.node.default_child).override_logical_id("LogCollectionStream")
             else:
-                # Create custom KMS key for stream encryption
                 # Create initial policy statements
                 policy_statements = [
                     iam.PolicyStatement(
                         sid="Allow IAM access delegation",
                         effect=iam.Effect.ALLOW,
-                        principals=[iam.AccountRootPrincipal()],
+                        principals=[iam.ArnPrincipal(f"arn:aws:iam::{self.account}:root")],
                         actions=["kms:*"],
                         resources=["*"]
                     ),
                     iam.PolicyStatement(
-                        sid="Allow access to decrypt",
-                        effect=iam.Effect.ALLOW,
-                        principals=[iam.ArnPrincipal(f"arn:aws:iam::{self.account}:role/{self.stack_name}-LambdaExecutionRole")],
-                        actions=["kms:Decrypt"],
-                        resources=["*"]
-                    )
-                ]
-                
-                # Add admin ARNs to key policy
-                if kinesis_encryption_key_admin_arns:
-                    admin_statement = iam.PolicyStatement(
                         sid="Allow access to key administrators",
                         effect=iam.Effect.ALLOW,
                         principals=[iam.ArnPrincipal(arn) for arn in kinesis_encryption_key_admin_arns],
@@ -293,17 +282,25 @@ class OcsfTransformationStack(Stack):
                             "kms:ScheduleKeyDeletion", "kms:CancelKeyDeletion"
                         ],
                         resources=["*"]
-                    )
-                    policy_statements.append(admin_statement)
+                    ),
+                ]
+
+                # Tell CloudFormation to keep the existing key as-is
+                existing_key = CfnResource(
+                    self, "ExistingKey",
+                    type="AWS::KMS::Key"
+                )
+                existing_key.override_logical_id("KinesisStreamKey")  # Use the existing logical ID
+                existing_key.cfn_options.deletion_policy = CfnDeletionPolicy.RETAIN  # Use CfnDeletionPolicy instead of RemovalPolicy
                 
                 # Create the KMS key with policy
                 kinesis_stream_key = kms.Key(
-                    self, "KinesisStreamKey",
+                    self, "NewKinesisStreamKey",
                     enable_key_rotation=True,
                     policy=iam.PolicyDocument(statements=policy_statements)
                 )
-                # Use the same logical ID as in the SAM template
-                (kinesis_stream_key.node.default_child).override_logical_id("KinesisStreamKey")
+
+                kinesis_stream_key.grant_decrypt(transformation_lambda_role)
                 
                 # Add Kinesis agent access to key policy if role was created
                 if create_kinesis_agent_role:
@@ -326,6 +323,7 @@ class OcsfTransformationStack(Stack):
                 )
                 # Use the same logical ID as in the SAM template
                 (log_collection_stream.node.default_child).override_logical_id("CMKEncryptedLogCollectionStream")
+
 
         # Create the unified transformation Lambda function with a unified logical ID
         lambda_function = lambda_.Function(
