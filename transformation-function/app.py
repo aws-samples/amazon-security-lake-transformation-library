@@ -135,7 +135,8 @@ def perform_transform(event_mapping, event):
             logger.warning(f"Error transforming field {key}: {str(e)}, setting to null")
             new_record[key] = None
 
-    new_record["type_uid"] = type_uid_calculation(new_record["activity_id"], new_record["class_uid"])
+    # Need to move this
+    # new_record["type_uid"] = type_uid_calculation(new_record["activity_id"], new_record["class_uid"])
             
     return new_record
 
