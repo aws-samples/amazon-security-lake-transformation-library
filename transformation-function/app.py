@@ -41,14 +41,6 @@ for source in sources_config['sources']:
     else:
         logger.warning(f"Mapping file not found for source: {source['name']}")
 
-# Check which sources have multiple schemas
-MULTISCHEMA_SOURCES = {}
-for source_name, mapping in source_mappings.items():
-    schemas = []
-    for k in mapping['custom_source_events']['ocsf_mapping'].keys():
-        schemas.append(mapping['custom_source_events']['ocsf_mapping'][k]['schema'])
-    MULTISCHEMA_SOURCES[source_name] = len(set(schemas)) > 1
-
 # Load all preprocessors at initialization time
 preprocessors = {}
 for source in sources_config['sources']:
@@ -255,6 +247,12 @@ def process_s3_event(record):
     unmapped_events = []
 
     message = json.loads(record['body'])
+
+    # Check for s3:TestEvent
+    if message.get('Event') == 's3:TestEvent':
+        logger.info('TestEvent received - skipping processing')
+        return mapped_events, unmapped_events
+    
     s3_details = message['Records'][0]['s3']
 
     bucket_name = s3_details['bucket']['name']
