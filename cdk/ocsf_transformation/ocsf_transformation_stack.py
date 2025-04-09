@@ -26,7 +26,7 @@ class OcsfTransformationStack(Stack):
         kinesis_user_arns = kwargs.pop("kinesis_user_arns", [])
         kinesis_encryption_key_admin_arns = kwargs.pop("kinesis_encryption_key_admin_arns", [])
         add_s3_event_notification = kwargs.pop("add_s3_event_notification", False)
-        
+
         super().__init__(scope, construct_id, **kwargs)
 
         # Define conditions like in the SAM template
@@ -39,13 +39,13 @@ class OcsfTransformationStack(Stack):
         # Always use the unified role ID regardless of deployment type
         transformation_lambda_role = iam.Role(
             self, "TransformationLambdaExecutionRole",
-            role_name=f"{self.stack_name}-LambdaExecutionRole",
+            role_name=f"{self.stack_name.lower()}-LambdaExecutionRole",
             assumed_by=iam.ServicePrincipal("lambda.amazonaws.com")
         )
-        
+
         # Always use the unified role logical ID
         (transformation_lambda_role.node.default_child).override_logical_id("TransformationLambdaExecutionRole")
-        
+
         # Add policies for both S3 and Kinesis permissions, regardless of deployment type
         # This ensures the role has all necessary permissions for any combination
         
@@ -58,7 +58,7 @@ class OcsfTransformationStack(Stack):
                 resources=[f"arn:aws:logs:{self.region}:{self.account}:*"]
             )
         )
-        
+
         transformation_lambda_role.add_to_policy(
             iam.PolicyStatement(
                 sid="LogsWrite",
@@ -138,7 +138,8 @@ class OcsfTransformationStack(Stack):
                 staging_log_bucket = s3.Bucket(
                     self, "StagingLogBucket",
                     bucket_name=f"{self.stack_name.lower()}-staging-log-bucket",
-                    removal_policy=RemovalPolicy.RETAIN
+                    removal_policy=RemovalPolicy.RETAIN,
+                    enforce_ssl=True
                 )
                 # Ensure S3 bucket has the same logical ID as in the SAM template
                 (staging_log_bucket.node.default_child).override_logical_id("StagingLogBucket")
@@ -156,7 +157,7 @@ class OcsfTransformationStack(Stack):
                         conditions={"StringEquals": {"s3:x-amz-acl": "bucket-owner-full-control"}}
                     )
                 )
-                
+
                 staging_log_bucket.add_to_resource_policy(
                     iam.PolicyStatement(
                         sid="AWSLogDeliveryAclCheck",
@@ -166,7 +167,7 @@ class OcsfTransformationStack(Stack):
                         principals=[iam.ServicePrincipal("delivery.logs.amazonaws.com")]
                     )
                 )
-                
+
                 # Get the CFN representation of the bucket policy
                 bucket_policy_cfn = staging_log_bucket.policy.node.default_child
                 # Override logical ID to match SAM template
@@ -192,7 +193,6 @@ class OcsfTransformationStack(Stack):
                         s3.NotificationKeyFilter(suffix=".log.gz")
                     )
 
-
             # Add S3-specific policies to the Lambda role
             transformation_lambda_role.add_to_policy(
                 iam.PolicyStatement(
@@ -202,7 +202,7 @@ class OcsfTransformationStack(Stack):
                     resources=[f"{log_bucket.bucket_arn}/*"]
                 )
             )
-            
+
             transformation_lambda_role.add_to_policy(
                 iam.PolicyStatement(
                     sid="SQSTrigger",
@@ -222,7 +222,7 @@ class OcsfTransformationStack(Stack):
             if create_kinesis_agent_role:
                 kinesis_agent_role = iam.Role(
                     self, "KinesisAgentIAMRole",
-                    role_name=f"{self.stack_name}-KinesisAgentRole",
+                    role_name=f"{self.stack_name.lower()}-KinesisAgentRole",
                     assumed_by=iam.CompositePrincipal(
                         *[iam.ArnPrincipal(arn) for arn in kinesis_user_arns]
                     )
@@ -238,7 +238,7 @@ class OcsfTransformationStack(Stack):
                         resources=["*"]
                     )
                 )
-                
+
                 kinesis_agent_role.add_to_policy(
                     iam.PolicyStatement(
                         sid="KMSAccess",
@@ -251,7 +251,7 @@ class OcsfTransformationStack(Stack):
             # Determine which key to use for Kinesis Stream
             # If no admin ARNs provided, use AWS managed key (like in SAM template)
             use_aws_managed_key = len(kinesis_encryption_key_admin_arns) == 0
-            
+
             if use_aws_managed_key:
                 # Create Kinesis stream with AWS managed key
                 log_collection_stream = kinesis.Stream(
@@ -308,12 +308,12 @@ class OcsfTransformationStack(Stack):
                         iam.PolicyStatement(
                             sid="Allow access to generate data key",
                             effect=iam.Effect.ALLOW,
-                            principals=[iam.ArnPrincipal(f"arn:aws:iam::{self.account}:role/{self.stack_name}-KinesisAgentRole")],
+                            principals=[iam.ArnPrincipal(f"arn:aws:iam::{self.account}:role/{self.stack_name.lower()}-KinesisAgentRole")],
                             actions=["kms:GenerateDataKey"],
                             resources=["*"]
                         )
                     )
-                
+
                 # Create encrypted Kinesis stream with custom key
                 log_collection_stream = kinesis.Stream(
                     self, "CMKEncryptedLogCollectionStream",
@@ -346,7 +346,7 @@ class OcsfTransformationStack(Stack):
                 )
             ]
         )
-        
+
         # Always use "TransformationLambdaFunction" as the logical ID for the Lambda function
         (lambda_function.node.default_child).override_logical_id("TransformationLambdaFunction")
 
@@ -372,7 +372,7 @@ class OcsfTransformationStack(Stack):
             description="OCSF Transformation Lambda Function ARN",
             value=lambda_function.function_arn
         )
-        
+
         # Additional outputs for created resources
         if is_s3_backed and create_staging_s3_bucket:
             CfnOutput(
@@ -380,7 +380,7 @@ class OcsfTransformationStack(Stack):
                 description="Name of the bucket for temporary log storage",
                 value=staging_log_bucket.bucket_arn
             )
-        
+
         if is_kinesis_backed:
             if use_aws_managed_key:
                 CfnOutput(
