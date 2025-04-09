@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 .DS_Store
 **/__pycache__
 .vscode/**
 .aws-sam/**
 **/.venv/**
 **/cdk.out
+=======
+**/.DS_Store
+.DS_Store
+.aws-sam/
+.vscode/
+>>>>>>> 56928a0 (fix: new KMS key but keeps old one)
