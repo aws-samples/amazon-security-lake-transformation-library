@@ -272,6 +272,17 @@ class OcsfTransformationStack(Stack):
                         resources=["*"]
                     ),
                     iam.PolicyStatement(
+                        sid="Allow access to decrypt",
+                        effect=iam.Effect.ALLOW,
+                        principals=[iam.ArnPrincipal(f"arn:aws:iam::{self.account}:role/{self.stack_name.lower()}-LambdaExecutionRole")],
+                        actions=["kms:Decrypt"],
+                        resources=["*"]
+                    )
+                ]
+
+                # Add admin ARNs to key policy
+                if kinesis_encryption_key_admin_arns:
+                    admin_statement = iam.PolicyStatement(
                         sid="Allow access to key administrators",
                         effect=iam.Effect.ALLOW,
                         principals=[iam.ArnPrincipal(arn) for arn in kinesis_encryption_key_admin_arns],
@@ -291,6 +302,8 @@ class OcsfTransformationStack(Stack):
                     enable_key_rotation=True,
                     policy=iam.PolicyDocument(statements=policy_statements)
                 )
+                # Use the same logical ID as in the SAM template
+                (kinesis_stream_key.node.default_child).override_logical_id("KinesisStreamKey")
 
                 # Use the same logical ID as in the SAM template
                 (kinesis_stream_key.node.default_child).override_logical_id("KinesisStreamKey")
