@@ -2,6 +2,12 @@
 
 This project provides a comprehensive solution for transforming various log sources into the Open Cybersecurity Schema Framework (OCSF) format for use with Amazon Security Lake. It enables you to ingest, transform, and store security data from custom sources in a standardized format.
 
+Supported custom sources:
+
+- [Windows Sysmon](windows-sysmon-mapping.md)
+- [AWS Network Firewall](./aws-network-firewall-mapping.md)
+- [Application Load Balancer](./application-load-balancer-mapping.md)
+
 ## What is Amazon Security Lake?
 
 Amazon Security Lake is a fully managed security data lake service that makes it easier to store, analyze, and manage security data at scale. Security Lake helps security teams centralize security data from cloud, on-premises, and custom sources into a purpose-built data lake stored in your AWS account. Security Lake automates the collection and management of security data across accounts and AWS Regions.

@@ -2,5 +2,8 @@
 **/__pycache__
 .vscode/**
 .aws-sam/**
+<<<<<<< HEAD
 **/.venv/**
 **/cdk.out
+=======
+>>>>>>> a5c0b3c (Add gitignore)
