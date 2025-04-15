@@ -2,7 +2,7 @@
 
 This project provides a comprehensive solution for transforming various log sources into the Open Cybersecurity Schema Framework (OCSF) format for use with Amazon Security Lake. It enables you to ingest, transform, and store security data from custom sources in a standardized format.
 
-Supported custom sources:
+Supported custom sources (OCSF v1.1.0):
 
 - [Windows Sysmon](./mapping_docs/windows-sysmon-mapping.md)
 - [AWS Network Firewall](./mapping_docs/aws-network-firewall-mapping.md)
