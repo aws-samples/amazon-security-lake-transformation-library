@@ -4,9 +4,9 @@ This project provides a comprehensive solution for transforming various log sour
 
 Supported custom sources:
 
-- [Windows Sysmon](windows-sysmon-mapping.md)
-- [AWS Network Firewall](./aws-network-firewall-mapping.md)
-- [Application Load Balancer](./application-load-balancer-mapping.md)
+- [Windows Sysmon](./mapping_docs/windows-sysmon-mapping.md)
+- [AWS Network Firewall](./mapping_docs/aws-network-firewall-mapping.md)
+- [Application Load Balancer](./mapping_docs/application-load-balancer-mapping.md)
 
 ## What is Amazon Security Lake?
 
@@ -39,9 +39,11 @@ Before deploying this solution, ensure you have:
 1. **AWS Organizations configured** in your AWS environment
 2. **[Security Lake activated](https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-sl.html#integrate-enable-da-sl)** with a delegated administrator configured in the [Log Archive AWS account](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/log-archive.html).
 3. **[AWS CDK installed](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)** on your development machine. E.g.
-   ```bash
+
+```bash
    npm install -g aws-cdk
-   ```
+```
+
 4. **Python 3.8 or higher** installed
 5. **AWS CLI configured** with appropriate credentials
 
