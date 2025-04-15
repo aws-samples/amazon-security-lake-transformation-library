@@ -18,7 +18,7 @@
     2018-07-02T22:22:48.364000Z "authenticate,forward" "-" "-" "10.0.0.1:80" "200" "-" "-" TID_123456
     ```
 
-2. Attribute mapping for Network Activity class
+2. Attribute mapping for HTTP Activity class
 
     |OCSF|Raw|
     |-|-|
