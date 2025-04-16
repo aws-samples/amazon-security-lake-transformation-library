@@ -1,6 +1,6 @@
 { 
     "custom_source_events": {
-        "source_name": "alb-logs",
+        "source_name": "aws-alb",
         "matched_field": "$.type",
         "timestamp": {
             "field": "$.time",
