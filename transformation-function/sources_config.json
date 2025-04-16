@@ -9,7 +9,7 @@
             "metadata_field": "source"
           }
         },
-        "mapping_file": "windows-sysmon-mapping.json"
+        "mapping_file": "windows-sysmon.json"
       },
       {
         "name": "aws-alb",
@@ -20,12 +20,27 @@
             "source_buckets": [
               {
                 "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 
-                "prefix": "alb-logs/"
+                "prefix": "aws-alb/"
               }
             ]
           }
         },
-        "mapping_file": "alb-mapping.json"
+        "mapping_file": "aws-alb.json"
+      },
+      {
+        "name": "aws-nfw",
+        "input_paths": {
+          "s3": {
+            "enabled": true,
+            "source_buckets": [
+              {
+                "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 
+                "prefix": "aws-nfw/"
+              }
+            ]
+          }
+        },
+        "mapping_file": "aws-nfw.json"
       }
     ]
   }
