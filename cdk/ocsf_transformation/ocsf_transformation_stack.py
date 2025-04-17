@@ -325,7 +325,7 @@ class OcsfTransformationStack(Stack):
             self, "TransformationLambdaFunction",
             runtime=lambda_.Runtime.PYTHON_3_10,
             handler="app.lambda_handler",
-            code=lambda_.Code.from_asset("../transformation-function/"),
+            code=lambda_.Code.from_asset("../transformation_function/"),
             role=transformation_lambda_role,
             tracing=lambda_.Tracing.ACTIVE,
             reserved_concurrent_executions=10,
