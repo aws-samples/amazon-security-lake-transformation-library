@@ -1,46 +1,45 @@
 {
-    "sources": [
-      {
-        "name": "windows-sysmon",
-        "preprocessor_module": "sysmon_preprocessor",
-        "input_paths": {
-          "kinesis": {
-            "enabled": true,
-            "metadata_field": "source"
-          }
-        },
-        "mapping_file": "windows_sysmon.json"
-      },
-      {
-        "name": "aws-alb",
-        "preprocessor_module": "alb_preprocessor",
-        "input_paths": {
-          "s3": {
-            "enabled": true,
-            "source_buckets": [
-              {
-                "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 
-                "prefix": "alb-logs/*"
-              }
-            ]
-          }
-        },
-        "mapping_file": "aws_alb.json"
-      },
-      {
-        "name": "aws-nfw",
-        "input_paths": {
-          "s3": {
-            "enabled": true,
-            "source_buckets": [
-              {
-                "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 
-                "prefix": "aws-nfw/*"
-              }
-            ]
-          }
-        },
-        "mapping_file": "aws_nfw.json"
+  "sources": [
+    {
+      "name": "windows-sysmon",
+      "preprocessor_module": "sysmon_preprocessor",
+      "input_paths": {
+        "kinesis": {
+          "enabled": true,
+          "metadata_field": "source"
+        }
       }
-    ]
-  }
+    },
+    {
+      "name": "aws-alb",
+      "preprocessor_module": "alb_preprocessor",
+      "input_paths": {
+        "s3": {
+          "enabled": true,
+          "source_buckets": [
+            {
+              "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 
+              "prefix": "alb-logs/*"
+            }
+          ]
+        }
+      },
+      "mapping_file": "aws_alb.json"
+    },
+    {
+      "name": "aws-nfw",
+      "input_paths": {
+        "s3": {
+          "enabled": true,
+          "source_buckets": [
+            {
+              "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 
+              "prefix": "aws-nfw/*"
+            }
+          ]
+        }
+      },
+      "mapping_file": "aws_nfw.json"
+    }
+  ]
+}
