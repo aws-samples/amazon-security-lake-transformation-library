@@ -9,7 +9,7 @@
             "metadata_field": "source"
           }
         },
-        "mapping_file": "windows-sysmon.json"
+        "mapping_file": "windows_sysmon.json"
       },
       {
         "name": "aws-alb",
@@ -25,7 +25,7 @@
             ]
           }
         },
-        "mapping_file": "aws-alb.json"
+        "mapping_file": "aws_alb.json"
       },
       {
         "name": "aws-nfw",
@@ -40,7 +40,7 @@
             ]
           }
         },
-        "mapping_file": "aws-nfw.json"
+        "mapping_file": "aws_nfw.json"
       }
     ]
   }
