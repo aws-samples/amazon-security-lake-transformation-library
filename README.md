@@ -172,7 +172,7 @@ You can deploy the solution using CDK context parameters or environment variable
 
 ```bash
 cdk deploy \
-  --context log_event_source=Both \
+  --context log_event_source=All \
   --context asl_bucket_location=my-security-lake-bucket \
   --context raw_log_s3_bucket_name=my-existing-bucket \
   --context add_s3_event_notification=true \
@@ -183,7 +183,7 @@ cdk deploy \
 **Using Environment Variables**
 
 ```bash
-export LOG_EVENT_SOURCE=Both
+export LOG_EVENT_SOURCE=All
 export ASL_BUCKET_LOCATION=my-security-lake-bucket
 export RAW_LOG_S3_BUCKET_NAME=my-existing-bucket
 export ADD_S3_EVENT_NOTIFICATION=true
@@ -196,7 +196,7 @@ cdk deploy
 
 | Parameter | Description | Allowed Values | Default |
 |-----------|-------------|----------------|---------|
-| `log_event_source` | Source of raw logs | `S3Bucket`, `KinesisDataStream`, `Both` | `Both` |
+| `log_event_source` | Source of raw logs | `S3Bucket`, `KinesisDataStream`, `All` | `All` |
 | `asl_bucket_location` | Security Lake S3 location | String (required) | - |
 | `raw_log_s3_bucket_name` | Existing S3 bucket name | String | `""` (creates new) |
 | `add_s3_event_notification` | Add S3 event notification | `true`, `false` | `false` |
