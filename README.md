@@ -67,6 +67,10 @@ amazon-security-lake-transformation-library/
 
 ## How It Works
 
+#### Solution Architecture
+
+![Solution architecture](./images/solution_architecture.png)
+
 The solution consists of three main components:
 
 1. **Transformation Lambda Function**: Processes incoming logs and transforms them to OCSF format.
@@ -83,15 +87,13 @@ The transformation process follows these steps:
 > **_NOTE:_** If you want to add more sources other than the supported after you have deployed the solution, please ensure that you update the mapping in the [mappings](./transformation_function/mappings/) and [sources_config.json](./transformation_function/sources_config.json) folder under [transformation_function](./transformation_function/) folder.
 ![Custom sources config](./images/custom_sources_config.png)
 
-<img src="images/solution_architecture.png" width="600" alt="Solution architecture">
-
 ## Deployment Steps
 
 #### STEP 1: Add custom source in Security Lake
 
 Navigate to the Security Lake console. Click **Custom sources** then click **Create custom source**. Update the details of the custom source and click **Create**.
 
-<img src="images/asl_custom_source_create.png" width="600" alt="Create custom source">
+![Create custom source](./images/asl_custom_source_create.png)
 
 The service will automatically create the Glue IAM role and Crawler configuration for the custom source.
 
@@ -159,7 +161,7 @@ Key components of the mapping:
    pip install -r requirements.txt
 ```
 
-4. [Bootstrap your CDK environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html). Replace the AWS Account ID and AWS Region with the values of the environment where you are choosing to deploy the project.
+4. [Bootstrap your CDK environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html). Replace the <AWS Account ID> and <AWS Region> with the values of the environment where you are choosing to deploy the project.
 
 ```bash
     cdk bootstrap aws://<AWS Account ID>/<AWS Region>
