@@ -61,7 +61,7 @@ amazon-security-lake-transformation-library/
 └── transformation_function/        # Lambda function code
     ├── app.py                      # Lambda handler
     ├── mappings/                   # OCSF mapping configurations. **Put all custom source mappings here.**
-    ├── preprocessors/              # Source-specific preprocessors
+    ├── preprocessors/              # Source-specific preprocessors. **Add preprocessors here for any new log sources that need it**
     └── sources_config.json         # Source configuration. **Update any new custom source definition here.**
 ```
 
@@ -81,6 +81,7 @@ The transformation process follows these steps:
 4. Transformed data is stored in the Security Lake S3 bucket in Parquet format.
 
 > **_NOTE:_** If you want to add more sources other than the supported after you have deployed the solution, please ensure that you update the mapping in the [mappings](./transformation_function/mappings/) and [sources_config.json](./transformation_function/sources_config.json) folder under [transformation_function](./transformation_function/) folder.
+![Custom sources config](./images/custom_sources_config.png)
 
 <img src="images/solution_architecture.png" width="600" alt="Solution architecture">
 
@@ -227,24 +228,8 @@ The Amazon Security Lake Transformation Library provides a flexible and powerful
 2. Navigate to the [AWS Glue service console](https://console.aws.amazon.com/glue). Search for **Crawlers** under **Data Catalog** and delete the crawler associated with the custom source.
 3. Create a new custom source in Security Lake, ensure that the name of the custom source is the same as defined in the [sources_config.json](./transformation_function/sources_config.json) file.
 
-```json
-{
-    "name": "aws-alb",                                                                  // Name of the custom source
-    "preprocessor_module": "alb_preprocessor",                                          // Preprocessor, if needed (optional)
-    "input_paths": {
-      "s3": {
-        "enabled": true,
-        "source_buckets": [
-          {
-            "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket",       // Name of the staging S3 bucket name to store raw logs
-            "prefix": "aws-alb/"
-          }
-        ]
-      }
-    },
-    "mapping_file": "aws-alb.json"                                                       // Location of the mapping file
-},
-```
+![Sources config](./images/sources_config.png)
+
 4. #TODO: Use this script to migrate logs from previously created custom source.
 
 **Q2: I use automation with custom source creation. How do I create a custom source without doing console actions?**
