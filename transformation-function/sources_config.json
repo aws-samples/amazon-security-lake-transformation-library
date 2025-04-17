@@ -20,7 +20,7 @@
             "source_buckets": [
               {
                 "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 
-                "prefix": "aws-alb/"
+                "prefix": "alb-logs/*"
               }
             ]
           }
@@ -35,7 +35,7 @@
             "source_buckets": [
               {
                 "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 
-                "prefix": "aws-nfw/"
+                "prefix": "aws-nfw/*"
               }
             ]
           }
