@@ -1,0 +1,125 @@
+{ 
+    "custom_source_events": {
+        "source_name": "aws-nfw",
+        "matched_field": "$.event.event_type",
+        "timestamp": {
+            "field": "$.event_timestamp",
+            "format": "epoch"
+        },
+        "ocsf_mapping": {
+            "netflow": {
+                "schema": "network_activity",
+                "schema_mapping": {   
+                    "metadata": {
+                        "profiles": "cloud,firewall",
+                        "version": "v1.0.0",
+                        "product" : {
+                            "name": "AWS Network Firewall",
+                            "vendor_name": "AWS",
+                            "feature": {
+                                "name": "Network Firewall"
+                            }
+                        }
+                    },
+                    "app_name": "$.firewall_name",
+                    "severity": "Informational",
+                    "severity_id": 1,
+                    "category_uid": 4,
+                    "category_name": "Network Activity",
+                    "class_uid": 4001,
+                    "class_name": "Network Activity",
+                    "type_uid": 400106,
+                    "activity_id": 6,
+                    "activity_name": "Traffic",
+                    "dst_endpoint": {
+                        "ip": "$.event.dest_ip",
+                        "port": "$.event.dest_port"
+                    },
+                    "src_endpoint": {
+                        "ip": "$.event.src_ip",
+                        "port": "$.event.src_port"
+                    },
+                    "time": "$.event.timestamp",
+                    "connection_info": {
+                        "uid": "$.event.flow_id",
+                        "protocol_name": "$.event.proto",
+                        "tcp_flags": "$.event.tcp.tcp_flags"
+                    },
+                    "start_time": "$.event.netflow.start",
+                    "end_time": "$.event.netflow.end",
+                    "traffic": {
+                        "bytes": "$.event.netflow.bytes",
+                        "packets": "$.event.netflow.pkts"
+                    },
+                    "unmapped": {
+                        "app_proto": "$.event.app_proto",
+                        "availability_zone": "$.availability_zone",
+                        "event_type": "$.event.event_type",
+                        "age": "$.event.netflow.age",
+                        "min_ttl": "$.event.netflow.min_ttl",
+                        "max_ttl": "$.event.netflow.max_ttl",
+                        "tcp": {
+                            "syn": "$.event.tcp.syn",
+                            "fin": "$.event.tcp.fin",
+                            "ack": "$.event.tcp.ack",
+                            "psh": "$.event.tcp.psh"
+                        }
+                    }   
+                }
+            },
+            "alert": {
+                "schema": "network_activity",
+                "schema_mapping": {   
+                    "metadata": {
+                        "profiles": "cloud,firewall",
+                        "version": "v1.0.0",
+                        "product" : {
+                            "name": "AWS Network Firewall",
+                            "vendor_name": "AWS",
+                            "feature": {
+                                "name": "Network Firewall"
+                            }
+                        }
+                    },
+                    "app_name": "$.firewall_name",
+                    "severity": "High",
+                    "severity_id": 3,
+                    "category_uid": 4,
+                    "category_name": "Network Activity",
+                    "class_uid": 4001,
+                    "class_name": "Network Activity",
+                    "type_uid": 400106,
+                    "activity_id": 6,
+                    "activity_name": "Traffic",
+                    "dst_endpoint": {
+                        "ip": "$.event.dest_ip",
+                        "port": "$.event.dest_port"
+                    },
+                    "src_endpoint": {
+                        "ip": "$.event.src_ip",
+                        "port": "$.event.src_port"
+                    },
+                    "time": "$.event.timestamp",
+                    "connection_info": {
+                        "uid": "$.event.flow_id",
+                        "protocol_name": "$.event.proto"
+                    },
+                    "tls": {
+                        "version": "$.event.tls.version"
+                    },
+                    "unmapped": {
+                        "app_proto": "$.event.app_proto",
+                        "action": "$.event.alert.action",
+                        "signature_id": "$.event.alert.signature_id",
+                        "rev": "$.event.alert.rev",
+                        "signature": "$.event.alert.signature",
+                        "category": "$.event.alert.category",
+                        "tls_inspected": "$.event.alert.tls_inspected",
+                        "sni": "$.event.tls.sni",
+                        "suricata_severity": "$.event.alert.severity"
+                    }
+                }
+            }
+        }
+    }
+}
