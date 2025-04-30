@@ -29,6 +29,22 @@
                     "category_name": "Network Activity",
                     "class_uid": 4002,
                     "class_name": "HTTP Activity",
+                    "type_uid": {
+                        "enum": {
+                            "evaluate": "$.request_method",
+                            "values": {
+                                "CONNECT": 400201,
+                                "DELETE": 400202,
+                                "GET": 400203,
+                                "HEAD": 400204,
+                                "OPTIONS": 400205,
+                                "POST": 400206,
+                                "PUT": 400207,
+                                "TRACE": 400208
+                            },
+                            "other": 400299
+                        }
+                    },
                     "activity_id": {
                         "enum": {
                             "evaluate": "$.request_method",

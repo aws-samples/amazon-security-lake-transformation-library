@@ -35,8 +35,9 @@
     | category_name | Network Activity |
     | class_uid | 4002 |
     | class_name | HTTP Activity |
-    | activity_id | `enum` evaluated on `<request_method` |
+    | activity_id | `enum` evaluated on `<request_method>` |
     | activity_name | `<request_method>` |
+    | type_uid | `enum` evaluated on `<request_method>` calculated as `class_uid * 100 + activity_id` |
     | http_request.http_method | `<request_method>` |
     | http_request.user_agent | `<user_agent>`|
     | http_request.url.hostname | `<domain_name>` |
