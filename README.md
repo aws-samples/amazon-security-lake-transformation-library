@@ -180,7 +180,7 @@ cdk deploy \
   --context raw_log_s3_bucket_name=my-existing-bucket \
   --context add_s3_event_notification=true \
   --context kinesis_user_arns="arn:aws:iam::123456789012:user/kinesis-user1" \
-  --context stack_name="my-ocsf-transformation"
+  --context stack_name="my-ocsf-transformation" # Optional - used when upgrading from previous version
 ```
 
 **Using Environment Variables**
