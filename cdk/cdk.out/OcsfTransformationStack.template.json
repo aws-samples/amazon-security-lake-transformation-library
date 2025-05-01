@@ -1,0 +1,697 @@
+{
+ "Description": "CDK deployment for OCSF transformation library",
+ "Resources": {
+  "TransformationLambdaExecutionRole": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "RoleName": "sysmon-ocsf-transform-infrastructure-LambdaExecutionRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/TransformationLambdaExecutionRole/Resource"
+   }
+  },
+  "TransformationLambdaExecutionRoleDefaultPolicy55B23BE4": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "logs:CreateLogGroup",
+       "Effect": "Allow",
+       "Resource": "arn:aws:logs:ap-southeast-2:612593915720:*",
+       "Sid": "LogGroupCreate"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:logs:ap-southeast-2:612593915720:log-group:/aws/lambda/*:*",
+       "Sid": "LogsWrite"
+      },
+      {
+       "Action": [
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:s3:::aws-security-data-lake-ap-southeast-2-ike2i1vn6fklszzrmwrbox49n/*",
+       "Sid": "S3Write"
+      },
+      {
+       "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets",
+        "xray:GetSamplingStatisticSummaries"
+       ],
+       "Effect": "Allow",
+       "Resource": "*",
+       "Sid": "TracingWithXRay"
+      },
+      {
+       "Action": [
+        "kinesis:PutRecord",
+        "kinesis:PutRecords",
+        "kinesis:DescribeStream",
+        "kinesis:DescribeStreamSummary",
+        "kinesis:GetRecords",
+        "kinesis:GetShardIterator",
+        "kinesis:ListShards",
+        "kinesis:ListStreams",
+        "kinesis:SubscribeToShard"
+       ],
+       "Effect": "Allow",
+       "Resource": "*",
+       "Sid": "KinesisReadWrite"
+      },
+      {
+       "Action": "kms:Decrypt",
+       "Effect": "Allow",
+       "Resource": "*",
+       "Sid": "KMSAccess"
+      },
+      {
+       "Action": "s3:GetObject*",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          {
+           "Fn::GetAtt": [
+            "StagingLogBucket",
+            "Arn"
+           ]
+          },
+          "/*"
+         ]
+        ]
+       },
+       "Sid": "S3Read"
+      },
+      {
+       "Action": [
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:ReceiveMessage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "SqsQueue",
+         "Arn"
+        ]
+       },
+       "Sid": "SQSTrigger"
+      },
+      {
+       "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueUrl",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "SqsQueue",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "kinesis:DescribeStreamSummary",
+        "kinesis:GetRecords",
+        "kinesis:GetShardIterator",
+        "kinesis:ListShards",
+        "kinesis:SubscribeToShard",
+        "kinesis:DescribeStream",
+        "kinesis:ListStreams",
+        "kinesis:DescribeStreamConsumer"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "LogCollectionStream",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "TransformationLambdaExecutionRoleDefaultPolicy55B23BE4",
+    "Roles": [
+     {
+      "Ref": "TransformationLambdaExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/TransformationLambdaExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "SqsQueue": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "VisibilityTimeout": 1200
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/SqsQueue/Resource"
+   }
+  },
+  "SqsQueuePolicy24A842E9": {
+   "Type": "AWS::SQS::QueuePolicy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+       ],
+       "Condition": {
+        "ArnLike": {
+         "aws:SourceArn": {
+          "Fn::GetAtt": [
+           "StagingLogBucket",
+           "Arn"
+          ]
+         }
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "s3.amazonaws.com"
+       },
+       "Resource": {
+        "Fn::GetAtt": [
+         "SqsQueue",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Queues": [
+     {
+      "Ref": "SqsQueue"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/SqsQueue/Policy/Resource"
+   }
+  },
+  "StagingLogBucket": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketName": "sysmon-ocsf-transform-infrastructure-staging-log-bucket"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/StagingLogBucket/Resource"
+   }
+  },
+  "StagingLogBucketPolicy": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "StagingLogBucket"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "s3:*",
+       "Condition": {
+        "Bool": {
+         "aws:SecureTransport": "false"
+        }
+       },
+       "Effect": "Deny",
+       "Principal": {
+        "AWS": "*"
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "StagingLogBucket",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "StagingLogBucket",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "s3:PutObject",
+       "Condition": {
+        "StringEquals": {
+         "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "delivery.logs.amazonaws.com"
+       },
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          {
+           "Fn::GetAtt": [
+            "StagingLogBucket",
+            "Arn"
+           ]
+          },
+          "/*"
+         ]
+        ]
+       },
+       "Sid": "AWSLogDeliveryWrite"
+      },
+      {
+       "Action": "s3:GetBucketAcl",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "delivery.logs.amazonaws.com"
+       },
+       "Resource": {
+        "Fn::GetAtt": [
+         "StagingLogBucket",
+         "Arn"
+        ]
+       },
+       "Sid": "AWSLogDeliveryAclCheck"
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/StagingLogBucket/Policy/Resource"
+   }
+  },
+  "StagingLogBucketNotificationsAFF87769": {
+   "Type": "Custom::S3BucketNotifications",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "StagingLogBucket"
+    },
+    "NotificationConfiguration": {
+     "QueueConfigurations": [
+      {
+       "Events": [
+        "s3:ObjectCreated:Put"
+       ],
+       "Filter": {
+        "Key": {
+         "FilterRules": [
+          {
+           "Name": "suffix",
+           "Value": ".log.gz"
+          }
+         ]
+        }
+       },
+       "QueueArn": {
+        "Fn::GetAtt": [
+         "SqsQueue",
+         "Arn"
+        ]
+       }
+      }
+     ]
+    },
+    "Managed": true,
+    "SkipDestinationValidation": false
+   },
+   "DependsOn": [
+    "SqsQueuePolicy24A842E9",
+    "SqsQueue",
+    "StagingLogBucketPolicy"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/StagingLogBucket/Notifications/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "s3:PutBucketNotification",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+    "Roles": [
+     {
+      "Ref": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Description": "AWS CloudFormation handler for \"Custom::S3BucketNotifications\" resources (@aws-cdk/aws-s3)",
+    "Code": {
+     "ZipFile": "import boto3  # type: ignore\nimport json\nimport logging\nimport urllib.request\n\ns3 = boto3.client(\"s3\")\n\nEVENTBRIDGE_CONFIGURATION = 'EventBridgeConfiguration'\nCONFIGURATION_TYPES = [\"TopicConfigurations\", \"QueueConfigurations\", \"LambdaFunctionConfigurations\"]\n\ndef handler(event: dict, context):\n  response_status = \"SUCCESS\"\n  error_message = \"\"\n  try:\n    props = event[\"ResourceProperties\"]\n    notification_configuration = props[\"NotificationConfiguration\"]\n    managed = props.get('Managed', 'true').lower() == 'true'\n    skipDestinationValidation = props.get('SkipDestinationValidation', 'false').lower() == 'true'\n    stack_id = event['StackId']\n    old = event.get(\"OldResourceProperties\", {}).get(\"NotificationConfiguration\", {})\n    if managed:\n      config = handle_managed(event[\"RequestType\"], notification_configuration)\n    else:\n      config = handle_unmanaged(props[\"BucketName\"], stack_id, event[\"RequestType\"], notification_configuration, old)\n    s3.put_bucket_notification_configuration(Bucket=props[\"BucketName\"], NotificationConfiguration=config, SkipDestinationValidation=skipDestinationValidation)\n  except Exception as e:\n    logging.exception(\"Failed to put bucket notification configuration\")\n    response_status = \"FAILED\"\n    error_message = f\"Error: {str(e)}. \"\n  finally:\n    submit_response(event, context, response_status, error_message)\n\ndef handle_managed(request_type, notification_configuration):\n  if request_type == 'Delete':\n    return {}\n  return notification_configuration\n\ndef handle_unmanaged(bucket, stack_id, request_type, notification_configuration, old):\n  def get_id(n):\n    n['Id'] = ''\n    sorted_notifications = sort_filter_rules(n)\n    strToHash=json.dumps(sorted_notifications, sort_keys=True).replace('\"Name\": \"prefix\"', '\"Name\": \"Prefix\"').replace('\"Name\": \"suffix\"', '\"Name\": \"Suffix\"')\n    return f\"{stack_id}-{hash(strToHash)}\"\n  def with_id(n):\n    n['Id'] = get_id(n)\n    return n\n\n  external_notifications = {}\n  existing_notifications = s3.get_bucket_notification_configuration(Bucket=bucket)\n  for t in CONFIGURATION_TYPES:\n    if request_type == 'Update':\n        old_incoming_ids = [get_id(n) for n in old.get(t, [])]\n        external_notifications[t] = [n for n in existing_notifications.get(t, []) if not get_id(n) in old_incoming_ids]      \n    elif request_type == 'Delete':\n        external_notifications[t] = [n for n in existing_notifications.get(t, []) if not n['Id'].startswith(f\"{stack_id}-\")]\n    elif request_type == 'Create':\n        external_notifications[t] = [n for n in existing_notifications.get(t, [])]\n  if EVENTBRIDGE_CONFIGURATION in existing_notifications:\n    external_notifications[EVENTBRIDGE_CONFIGURATION] = existing_notifications[EVENTBRIDGE_CONFIGURATION]\n\n  if request_type == 'Delete':\n    return external_notifications\n\n  notifications = {}\n  for t in CONFIGURATION_TYPES:\n    external = external_notifications.get(t, [])\n    incoming = [with_id(n) for n in notification_configuration.get(t, [])]\n    notifications[t] = external + incoming\n\n  if EVENTBRIDGE_CONFIGURATION in notification_configuration:\n    notifications[EVENTBRIDGE_CONFIGURATION] = notification_configuration[EVENTBRIDGE_CONFIGURATION]\n  elif EVENTBRIDGE_CONFIGURATION in external_notifications:\n    notifications[EVENTBRIDGE_CONFIGURATION] = external_notifications[EVENTBRIDGE_CONFIGURATION]\n\n  return notifications\n\ndef submit_response(event: dict, context, response_status: str, error_message: str):\n  response_body = json.dumps(\n    {\n      \"Status\": response_status,\n      \"Reason\": f\"{error_message}See the details in CloudWatch Log Stream: {context.log_stream_name}\",\n      \"PhysicalResourceId\": event.get(\"PhysicalResourceId\") or event[\"LogicalResourceId\"],\n      \"StackId\": event[\"StackId\"],\n      \"RequestId\": event[\"RequestId\"],\n      \"LogicalResourceId\": event[\"LogicalResourceId\"],\n      \"NoEcho\": False,\n    }\n  ).encode(\"utf-8\")\n  headers = {\"content-type\": \"\", \"content-length\": str(len(response_body))}\n  try:\n    req = urllib.request.Request(url=event[\"ResponseURL\"], headers=headers, data=response_body, method=\"PUT\")\n    with urllib.request.urlopen(req) as response:\n      print(response.read().decode(\"utf-8\"))\n    print(\"Status code: \" + response.reason)\n  except Exception as e:\n      print(\"send(..) failed executing request.urlopen(..): \" + str(e))\n\ndef sort_filter_rules(json_obj):\n  if not isinstance(json_obj, dict):\n      return json_obj\n  for key, value in json_obj.items():\n      if isinstance(value, dict):\n          json_obj[key] = sort_filter_rules(value)\n      elif isinstance(value, list):\n          json_obj[key] = [sort_filter_rules(item) for item in value]\n  if \"Filter\" in json_obj and \"Key\" in json_obj[\"Filter\"] and \"FilterRules\" in json_obj[\"Filter\"][\"Key\"]:\n      filter_rules = json_obj[\"Filter\"][\"Key\"][\"FilterRules\"]\n      sorted_filter_rules = sorted(filter_rules, key=lambda x: x[\"Name\"])\n      json_obj[\"Filter\"][\"Key\"][\"FilterRules\"] = sorted_filter_rules\n  return json_obj"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+    "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource"
+   }
+  },
+  "KinesisAgentIAMRole": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::612593915720:role/AccountGuardian-SSMRole-DO-NOT-DELETE"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "RoleName": "sysmon-ocsf-transform-infrastructure-KinesisAgentRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/KinesisAgentIAMRole/Resource"
+   }
+  },
+  "KinesisAgentIAMRoleDefaultPolicy46936674": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "kinesis:PutRecord",
+        "kinesis:PutRecords"
+       ],
+       "Effect": "Allow",
+       "Resource": "*",
+       "Sid": "KinesisWrite"
+      },
+      {
+       "Action": "kms:GenerateDataKey",
+       "Effect": "Allow",
+       "Resource": "*",
+       "Sid": "KMSAccess"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "KinesisAgentIAMRoleDefaultPolicy46936674",
+    "Roles": [
+     {
+      "Ref": "KinesisAgentIAMRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/KinesisAgentIAMRole/DefaultPolicy/Resource"
+   }
+  },
+  "LogCollectionStream": {
+   "Type": "AWS::Kinesis::Stream",
+   "Properties": {
+    "RetentionPeriodHours": 24,
+    "ShardCount": 1,
+    "StreamEncryption": {
+     "EncryptionType": "KMS",
+     "KeyId": "alias/aws/kinesis"
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/LogCollectionStream/Resource"
+   }
+  },
+  "TransformationLambdaFunction": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-612593915720-ap-southeast-2",
+     "S3Key": "520ecb16beba22331e298571de9ca56d2f0ecdc6f3b99d75d7092b0bfc8ff801.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "SEC_LAKE_BUCKET": "aws-security-data-lake-ap-southeast-2-ike2i1vn6fklszzrmwrbox49n",
+      "DEBUG": "false"
+     }
+    },
+    "Handler": "app.lambda_handler",
+    "Layers": [
+     "arn:aws:lambda:ap-southeast-2:336392948345:layer:AWSSDKPandas-Python310:5"
+    ],
+    "ReservedConcurrentExecutions": 10,
+    "Role": {
+     "Fn::GetAtt": [
+      "TransformationLambdaExecutionRole",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.10",
+    "Timeout": 10,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "TransformationLambdaExecutionRoleDefaultPolicy55B23BE4",
+    "TransformationLambdaExecutionRole"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/TransformationLambdaFunction/Resource",
+    "aws:asset:path": "asset.520ecb16beba22331e298571de9ca56d2f0ecdc6f3b99d75d7092b0bfc8ff801",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "TransformationLambdaFunctionSqsEventSourceOcsfTransformationStackSqsQueue321260D43524F9C2": {
+   "Type": "AWS::Lambda::EventSourceMapping",
+   "Properties": {
+    "BatchSize": 10,
+    "EventSourceArn": {
+     "Fn::GetAtt": [
+      "SqsQueue",
+      "Arn"
+     ]
+    },
+    "FunctionName": {
+     "Ref": "TransformationLambdaFunction"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/TransformationLambdaFunction/SqsEventSource:OcsfTransformationStackSqsQueue321260D4/Resource"
+   }
+  },
+  "TransformationLambdaFunctionKinesisEventSourceOcsfTransformationStackLogCollectionStream7541DC769A64FC76": {
+   "Type": "AWS::Lambda::EventSourceMapping",
+   "Properties": {
+    "BatchSize": 100,
+    "EventSourceArn": {
+     "Fn::GetAtt": [
+      "LogCollectionStream",
+      "Arn"
+     ]
+    },
+    "FunctionName": {
+     "Ref": "TransformationLambdaFunction"
+    },
+    "StartingPosition": "LATEST"
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/TransformationLambdaFunction/KinesisEventSource:OcsfTransformationStackLogCollectionStream7541DC76/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2VQy07DMBD8Fu7OlpJLrxTBrWpJP6DaukvZJrFD1gZVVv69fhQK4uKZ2Zm1VvMA88UC7u/wSyp9aKuO9xC2DnWr4mgXGHsIje1IPb2ZjBvbsT4nWdik5EMgvHryOVRIfm/RXzLmawhLr1tyybqyAreNP7qIJQpNqmVDwpKuHAn7lC1sUh32+wNCePFGO7YmeT/8+ZOM21o/alrhMLA5Jvv/NN23QxFyAo8JJtWQ5ETu4JtnLzZ1vP609m7wMbw5u3drZjXM69jrSZir0RvHPUFT8AJsH9S6dAEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "OcsfTransformationStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "TransformationLambdaFunctionARN": {
+   "Description": "OCSF Transformation Lambda Function ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "TransformationLambdaFunction",
+     "Arn"
+    ]
+   }
+  },
+  "StagingLogBucketARN": {
+   "Description": "Name of the bucket for temporary log storage",
+   "Value": {
+    "Fn::GetAtt": [
+     "StagingLogBucket",
+     "Arn"
+    ]
+   }
+  },
+  "LogCollectionStreamName": {
+   "Description": "Name of the log collection Kinesis Stream",
+   "Value": {
+    "Ref": "LogCollectionStream"
+   }
+  },
+  "KinesisAgentIAMRoleARN": {
+   "Description": "ARN of the IAM role created for Kinesis agent to assume for log streaming",
+   "Value": {
+    "Fn::GetAtt": [
+     "KinesisAgentIAMRole",
+     "Arn"
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

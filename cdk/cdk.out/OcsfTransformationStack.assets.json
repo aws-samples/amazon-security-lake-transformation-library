@@ -1,0 +1,36 @@
+{
+  "version": "41.0.0",
+  "files": {
+    "520ecb16beba22331e298571de9ca56d2f0ecdc6f3b99d75d7092b0bfc8ff801": {
+      "displayName": "TransformationLambdaFunction/Code",
+      "source": {
+        "path": "asset.520ecb16beba22331e298571de9ca56d2f0ecdc6f3b99d75d7092b0bfc8ff801",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "612593915720-ap-southeast-2": {
+          "bucketName": "cdk-hnb659fds-assets-612593915720-ap-southeast-2",
+          "objectKey": "520ecb16beba22331e298571de9ca56d2f0ecdc6f3b99d75d7092b0bfc8ff801.zip",
+          "region": "ap-southeast-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::612593915720:role/cdk-hnb659fds-file-publishing-role-612593915720-ap-southeast-2"
+        }
+      }
+    },
+    "aa6568095d4ad6bba5ac853768f9609ec910994ae1d187691a9cf146e40021bd": {
+      "displayName": "sysmon-ocsf-transform-infrastructure Template",
+      "source": {
+        "path": "OcsfTransformationStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "612593915720-ap-southeast-2": {
+          "bucketName": "cdk-hnb659fds-assets-612593915720-ap-southeast-2",
+          "objectKey": "aa6568095d4ad6bba5ac853768f9609ec910994ae1d187691a9cf146e40021bd.json",
+          "region": "ap-southeast-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::612593915720:role/cdk-hnb659fds-file-publishing-role-612593915720-ap-southeast-2"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

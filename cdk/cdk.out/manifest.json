@@ -1,0 +1,187 @@
+{
+  "version": "41.0.0",
+  "artifacts": {
+    "OcsfTransformationStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "OcsfTransformationStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "OcsfTransformationStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://612593915720/ap-southeast-2",
+      "properties": {
+        "templateFile": "OcsfTransformationStack.template.json",
+        "terminationProtection": false,
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::612593915720:role/cdk-hnb659fds-deploy-role-612593915720-ap-southeast-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::612593915720:role/cdk-hnb659fds-cfn-exec-role-612593915720-ap-southeast-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-612593915720-ap-southeast-2/aa6568095d4ad6bba5ac853768f9609ec910994ae1d187691a9cf146e40021bd.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "OcsfTransformationStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::612593915720:role/cdk-hnb659fds-lookup-role-612593915720-ap-southeast-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        },
+        "stackName": "sysmon-ocsf-transform-infrastructure"
+      },
+      "dependencies": [
+        "OcsfTransformationStack.assets"
+      ],
+      "metadata": {
+        "/OcsfTransformationStack/TransformationLambdaExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TransformationLambdaExecutionRole"
+          }
+        ],
+        "/OcsfTransformationStack/TransformationLambdaExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TransformationLambdaExecutionRoleDefaultPolicy55B23BE4"
+          }
+        ],
+        "/OcsfTransformationStack/SqsQueue/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SqsQueue"
+          }
+        ],
+        "/OcsfTransformationStack/SqsQueue/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SqsQueuePolicy24A842E9"
+          }
+        ],
+        "/OcsfTransformationStack/StagingLogBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StagingLogBucket"
+          }
+        ],
+        "/OcsfTransformationStack/StagingLogBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StagingLogBucketPolicy"
+          }
+        ],
+        "/OcsfTransformationStack/StagingLogBucket/Notifications/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StagingLogBucketNotificationsAFF87769"
+          }
+        ],
+        "/OcsfTransformationStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+          }
+        ],
+        "/OcsfTransformationStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36"
+          }
+        ],
+        "/OcsfTransformationStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691"
+          }
+        ],
+        "/OcsfTransformationStack/KinesisAgentIAMRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KinesisAgentIAMRole"
+          }
+        ],
+        "/OcsfTransformationStack/KinesisAgentIAMRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KinesisAgentIAMRoleDefaultPolicy46936674"
+          }
+        ],
+        "/OcsfTransformationStack/LogCollectionStream/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogCollectionStream"
+          }
+        ],
+        "/OcsfTransformationStack/TransformationLambdaFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TransformationLambdaFunction"
+          }
+        ],
+        "/OcsfTransformationStack/TransformationLambdaFunction/SqsEventSource:OcsfTransformationStackSqsQueue321260D4/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TransformationLambdaFunctionSqsEventSourceOcsfTransformationStackSqsQueue321260D43524F9C2"
+          }
+        ],
+        "/OcsfTransformationStack/TransformationLambdaFunction/KinesisEventSource:OcsfTransformationStackLogCollectionStream7541DC76/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TransformationLambdaFunctionKinesisEventSourceOcsfTransformationStackLogCollectionStream7541DC769A64FC76"
+          }
+        ],
+        "/OcsfTransformationStack/TransformationLambdaFunctionARN": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TransformationLambdaFunctionARN"
+          }
+        ],
+        "/OcsfTransformationStack/StagingLogBucketARN": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StagingLogBucketARN"
+          }
+        ],
+        "/OcsfTransformationStack/LogCollectionStreamName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogCollectionStreamName"
+          }
+        ],
+        "/OcsfTransformationStack/KinesisAgentIAMRoleARN": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KinesisAgentIAMRoleARN"
+          }
+        ],
+        "/OcsfTransformationStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/OcsfTransformationStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/OcsfTransformationStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "OcsfTransformationStack"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  },
+  "minimumCliVersion": "2.1005.0"
+}
