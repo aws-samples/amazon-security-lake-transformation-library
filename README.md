@@ -232,8 +232,6 @@ The Amazon Security Lake Transformation Library provides a flexible and powerful
 
 <img src="./images/sources_config.png" alt="Sources config" style="border: 3px solid black;">
 
-4. #TODO: Use this script to migrate logs from previously created custom source.
-
 **Q2: I use automation with custom source creation. How do I create a custom source without doing console actions?**
 
 **A2:** Use the following steps to automate custom source creation with this project.
