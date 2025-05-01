@@ -1,12 +1,8 @@
+**/.DS_Store
 .DS_Store
 **/__pycache__
 .vscode/**
 .aws-sam/**
-<<<<<<< HEAD
-<<<<<<< HEAD
 **/.venv/**
 **/cdk.out
-=======
->>>>>>> a5c0b3c (Add gitignore)
-=======
->>>>>>> 4eb1d8b (Add gitignore)
+
