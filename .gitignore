@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 .DS_Store
 **/__pycache__
 .vscode/**
@@ -6,8 +7,21 @@
 **/.venv/**
 **/cdk.out
 =======
+=======
+>>>>>>> dcf70e0 (obfuscate account ID)
 **/.DS_Store
 .DS_Store
 .aws-sam/
 .vscode/
+<<<<<<< HEAD
 >>>>>>> 56928a0 (fix: new KMS key but keeps old one)
+=======
+=======
+.DS_Store
+**/__pycache__
+.vscode/**
+.aws-sam/**
+**/.venv/**
+**/cdk.out
+>>>>>>> da62400 (obfuscate account ID)
+>>>>>>> dcf70e0 (obfuscate account ID)
