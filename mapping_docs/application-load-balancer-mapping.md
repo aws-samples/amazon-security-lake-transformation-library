@@ -17,7 +17,6 @@
     "Root=1-58337281-1d84f3d73c47ec4e58577259" "www.example.com" 
     "arn:aws:acm:us-east-2:XXXXXXXXXXXX:certificate/XXXXXXXX-1234-1234-1234-XXXXXXXXXXXX" 1 
     2018-07-02T22:22:48.364000Z "authenticate,forward" "-" "-" "10.0.0.1:80" "200" "-" "-" TID_123456
-
     ```
 
 2. Attribute mapping for HTTP Activity class
