@@ -3,8 +3,10 @@ import base64
 import json
 import gzip
 import os
+import re
 import logging
 import uuid
+import urllib
 import importlib
 import pandas as pd
 import awswrangler as wr
@@ -45,7 +47,12 @@ for source in sources_config['sources']:
 preprocessors = {}
 for source in sources_config['sources']:
     try:
-        module_name = source['preprocessor_module']
+        # Check if preprocessor_module exists and is not empty
+        module_name = source.get('preprocessor_module')
+        if not module_name:  # handles None, empty string, or key not existing
+            logger.info(f"No preprocessor defined for source: {source['name']}, skipping")
+            continue
+            
         # Import the specific module mentioned in the config
         module = importlib.import_module(f'preprocessors.{module_name}')
         
@@ -72,6 +79,14 @@ def timestamp_transform(timestamp, format):
         dt_event = datetime.strptime(timestamp, format)
         eventday = str(dt_event.year)+f'{dt_event.month:02d}'+f'{dt_event.day:02d}'
         return eventday
+
+# function to convert S3 prefix pattern to regex pattern
+def create_regex_from_prefix(prefix: str) -> str:
+    # Escape any forward slashes first
+    prefix = prefix.replace('/', '\\/')
+    # Replace /* with regex pattern that matches anything
+    regex_pattern = prefix.replace('*', '.*')
+    return f"^{regex_pattern}$"
 
 # function to return value from '$.' reference in config line
 def get_dot_locator_value(dot_locator, event):
@@ -162,29 +177,24 @@ def detect_source_from_kinesis(payload_json):
 # Detect source from S3 object key
 def detect_source_from_s3_key(bucket_name, object_key):
     """
-    Detect the source based on S3 object key prefix or bucket/prefix combination
+    Detect the source based on bucket name and S3 object key prefix pattern
     Returns None if source cannot be determined
     """
     for source in sources_config['sources']:
         s3_config = source['input_paths'].get('s3', {})
         
         if s3_config.get('enabled', False):
-            # Check if the object key starts with any of the configured prefixes
-            path_prefixes = s3_config.get('path_prefixes', [])
-            for prefix in path_prefixes:
-                if object_key.startswith(prefix):
-                    logger.debug(f"Detected source from S3 key prefix: {source['name']}")
-                    return source['name']
-            
-            # Check if it matches any source bucket configuration
             source_buckets = s3_config.get('source_buckets', [])
+            # First check if this is the right bucket
             for source_bucket in source_buckets:
                 if source_bucket.get('bucket_name') == bucket_name:
-                    bucket_prefix = source_bucket.get('prefix', '')
-                    # Empty prefix means match any object in this bucket
-                    if not bucket_prefix or object_key.startswith(bucket_prefix):
-                        logger.debug(f"Detected source from bucket/prefix match: {source['name']}")
-                        return source['name']
+                    # Get prefix directly from source_bucket
+                    prefix = source_bucket.get('prefix')
+                    if prefix:
+                        pattern = create_regex_from_prefix(prefix)
+                        if re.match(pattern, object_key):
+                            logger.debug(f"Detected source from S3 bucket/key pattern match: {source['name']}")
+                            return source['name']
     
     # If no source detected, return None
     logger.warning(f"No source detected for bucket: {bucket_name}, key: {object_key}")
@@ -257,19 +267,23 @@ def process_s3_event(record):
 
     bucket_name = s3_details['bucket']['name']
     object_key = s3_details['object']['key']
+
+    # URL decode the object key
+    decoded_key = urllib.parse.unquote(object_key)
+    logger.debug(f"Decoded key: {decoded_key}")
     
     # Detect source from S3 bucket and key
-    source_name = detect_source_from_s3_key(bucket_name, object_key)
+    source_name = detect_source_from_s3_key(bucket_name, decoded_key)
     if source_name is None:
-        logger.error(f"Cannot determine source for S3 object: {bucket_name}/{object_key}")
+        logger.error(f"Cannot determine source for S3 object: {bucket_name}/{decoded_key}")
         return [], []
         
-    logger.info(f"Processing S3 object from source: {source_name}, key: {object_key}")
+    logger.info(f"Processing S3 object from source: {source_name}, key: {decoded_key}")
 
     s3_client = boto3.client('s3')
     response = s3_client.get_object(
         Bucket=bucket_name,
-        Key=object_key
+        Key=decoded_key
     )
 
     log_file = gzip.GzipFile(
