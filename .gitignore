@@ -5,3 +5,6 @@
 .aws-sam/**
 **/.venv/**
 **/cdk.out
+.aws-sam
+.vscode
+git_excludes/*
