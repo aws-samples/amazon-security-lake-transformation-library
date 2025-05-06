@@ -80,4 +80,4 @@
     | file | { 'name': `<TargetFilename>`, type_id: 1 } |
     | type_uid | 100101 |
 
-    You can follow the same process to map the remaining classes. The [windows_sysmon.json](./transformation_function/mappings/windows_sysmon.json) defined in this documentation maps four events across two OCSF classes (FILE_ACTIVITY and PROCESS_ACTIVITY). You can use the same method to configure mapping for NETWORK_ACTIVITY and DNS_ACTIVITY sysmon events.
+    You can follow the same process to map the remaining classes. The [windows_sysmon.json](./transformation_function/mappings/windows_sysmon.json) defined in this project maps four events across two OCSF classes (FILE_ACTIVITY and PROCESS_ACTIVITY). You can use the same method to configure mapping for NETWORK_ACTIVITY and DNS_ACTIVITY sysmon events.
