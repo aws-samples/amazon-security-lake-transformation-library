@@ -1,0 +1,328 @@
+{ 
+    "custom_source_events": {
+        "source_name": "aws-alb",
+        "matched_field": "$.type",
+        "timestamp": {
+            "field": "$.time",
+            "format": "%Y-%m-%dT%H:%M:%S.%fZ"
+        },
+        "ocsf_mapping": {
+            "http": {
+                "schema": "http_activity",
+                "schema_mapping": {   
+                    "metadata": {
+                        "profiles": "cloud,loadbalancing",
+                        "version": "v1.1.0",
+                        "product" : {
+                            "name": "AWS ELB",
+                            "vendor_name": "AWS",
+                            "feature": {
+                                "name": "Application Load Balancer"
+                            },
+                            "uid": "$.elb"
+                        }
+                    },
+                    "app_name": "$.elb",
+                    "severity": "Informational",
+                    "severity_id": 1,
+                    "category_uid": 4,
+                    "category_name": "Network Activity",
+                    "class_uid": 4002,
+                    "class_name": "HTTP Activity",
+                    "type_uid": {
+                        "enum": {
+                            "evaluate": "$.request_method",
+                            "values": {
+                                "CONNECT": 400201,
+                                "DELETE": 400202,
+                                "GET": 400203,
+                                "HEAD": 400204,
+                                "OPTIONS": 400205,
+                                "POST": 400206,
+                                "PUT": 400207,
+                                "TRACE": 400208
+                            },
+                            "other": 400299
+                        }
+                    },
+                    "activity_id": {
+                        "enum": {
+                            "evaluate": "$.request_method",
+                            "values": {
+                                "CONNECT": 1,
+                                "DELETE": 2,
+                                "GET": 3,
+                                "HEAD": 4,
+                                "OPTIONS": 5,
+                                "POST": 6,
+                                "PUT": 7,
+                                "TRACE": 8
+                            },
+                            "other": 99
+                        }
+                    },
+                    "activity_name": "$.request_method",
+                    "http_request":{
+                        "http_method": "$.request_method",
+                        "user_agent": "$.user_agent",
+                        "url": {
+                            "hostname": "$.domain_name",
+                            "url_string": "$.request_url",
+                            "scheme": "$.type"
+                        }
+                    },
+                    "http_response":{
+                        "code": "$.elb_status_code"
+                    },
+                    "connection_info": {
+                        "direction_id": 1,
+                        "protocol_ver_id": 4,
+                        "protocol_name": "tcp",
+                        "protocol_num": 6
+                    },
+                    "dst_endpoint": {
+                        "hostname": "$.target_group_arn",
+                        "ip": "$.target_ip",
+                        "port": "$.target_port",
+                        "type": "Virtual",
+                        "type_id": 6
+                    },
+                    "duration": "$.request_processing_time",
+                    "src_endpoint": {
+                        "ip": "$.client_ip",
+                        "port": "$.client_port"
+                    },
+                    "time": "$.time",
+                    "start_time": "$.request_creation_time",
+                    "traffic": {
+                        "bytes_in": "$.received_bytes",
+                        "bytes_out": "$.sent_bytes"
+                    },
+                    "tls": {
+                        "certificate": "$.chosen_cert_arn",
+                        "cipher": "$.ssl_cipher",
+                        "sni": "$.domain_name",
+                        "version": "$.ssl_protocol"
+                    },
+                    "unmapped": {
+                        "target_processing_time": "$.target_processing_time",
+                        "response_processing_time": "$.response_processing_time",
+                        "target_status_code": "$.target_status_code",
+                        "matched_rule_priority": "$.matched_rule_priority",
+                        "actions_executed": "$.actions_executed",
+                        "redirect_url": "$.redirect_url",
+                        "error_reason": "$.error_reason",
+                        "target_ip_list": "$.target_ip_list",
+                        "target_port_list": "$.target_port_list",
+                        "target_status_code_list": "$.target_status_code_list",
+                        "classification": "$.classification",
+                        "classification_reason": "$.classification_reason",
+                        "trace_id": "$.trace_id",
+                        "conn_trace_id": "$.conn_trace_id",
+                        "request_protocol": "$.request_protocol"
+                    }   
+                }
+            },
+            "https": {
+                "schema": "http_activity",
+                "schema_mapping": {   
+                    "metadata": {
+                        "profiles": "cloud,loadbalancing",
+                        "version": "v1.1.0",
+                        "product" : {
+                            "name": "AWS ELB",
+                            "vendor_name": "AWS",
+                            "feature": {
+                                "name": "Application Load Balancer"
+                            },
+                            "uid": "$.elb"
+                        }
+                    },
+                    "app_name": "$.elb",
+                    "severity": "Informational",
+                    "severity_id": 1,
+                    "category_uid": 4,
+                    "category_name": "Network Activity",
+                    "class_uid": 4002,
+                    "class_name": "HTTP Activity",
+                    "activity_id": {
+                        "enum": {
+                            "evaluate": "$.request_method",
+                            "values": {
+                                "CONNECT": 1,
+                                "DELETE": 2,
+                                "GET": 3,
+                                "HEAD": 4,
+                                "OPTIONS": 5,
+                                "POST": 6,
+                                "PUT": 7,
+                                "TRACE": 8
+                            },
+                            "other": 99
+                        }
+                    },
+                    "activity_name": "$.request_method",
+                    "http_request":{
+                        "http_method": "$.request_method",
+                        "user_agent": "$.user_agent",
+                        "url": {
+                            "hostname": "$.domain_name",
+                            "url_string": "$.request_url",
+                            "scheme": "$.type"
+                        }
+                    },
+                    "http_response":{
+                        "code": "$.elb_status_code"
+                    },
+                    "connection_info": {
+                        "direction_id": 1,
+                        "protocol_ver_id": 4,
+                        "protocol_name": "tcp",
+                        "protocol_num": 6
+                    },
+                    "dst_endpoint": {
+                        "hostname": "$.target_group_arn",
+                        "ip": "$.target_ip",
+                        "port": "$.target_port",
+                        "type": "Virtual",
+                        "type_id": 6
+                    },
+                    "duration": "$.request_processing_time",
+                    "src_endpoint": {
+                        "ip": "$.client_ip",
+                        "port": "$.client_port"
+                    },
+                    "time": "$.time",
+                    "start_time": "$.request_creation_time",
+                    "traffic": {
+                        "bytes_in": "$.received_bytes",
+                        "bytes_out": "$.sent_bytes"
+                    },
+                    "tls": {
+                        "certificate": "$.chosen_cert_arn",
+                        "cipher": "$.ssl_cipher",
+                        "sni": "$.domain_name",
+                        "version": "$.ssl_protocol"
+                    },
+                    "unmapped": {
+                        "target_processing_time": "$.target_processing_time",
+                        "response_processing_time": "$.response_processing_time",
+                        "target_status_code": "$.target_status_code",
+                        "matched_rule_priority": "$.matched_rule_priority",
+                        "actions_executed": "$.actions_executed",
+                        "redirect_url": "$.redirect_url",
+                        "error_reason": "$.error_reason",
+                        "target_ip_list": "$.target_ip_list",
+                        "target_port_list": "$.target_port_list",
+                        "target_status_code_list": "$.target_status_code_list",
+                        "classification": "$.classification",
+                        "classification_reason": "$.classification_reason",
+                        "trace_id": "$.trace_id",
+                        "conn_trace_id": "$.conn_trace_id",
+                        "request_protocol": "$.request_protocol"
+                    }   
+                }
+            },
+            "h2": {
+                "schema": "http_activity",
+                "schema_mapping": {   
+                    "metadata": {
+                        "profiles": "cloud,loadbalancing",
+                        "version": "v1.1.0",
+                        "product" : {
+                            "name": "AWS ELB",
+                            "vendor_name": "AWS",
+                            "feature": {
+                                "name": "Application Load Balancer"
+                            },
+                            "uid": "$.elb"
+                        }
+                    },
+                    "app_name": "$.elb",
+                    "severity": "Informational",
+                    "severity_id": 1,
+                    "category_uid": 4,
+                    "category_name": "Network Activity",
+                    "class_uid": 4002,
+                    "class_name": "HTTP Activity",
+                    "activity_id": {
+                        "enum": {
+                            "evaluate": "$.request_method",
+                            "values": {
+                                "CONNECT": 1,
+                                "DELETE": 2,
+                                "GET": 3,
+                                "HEAD": 4,
+                                "OPTIONS": 5,
+                                "POST": 6,
+                                "PUT": 7,
+                                "TRACE": 8
+                            },
+                            "other": 99
+                        }
+                    },
+                    "activity_name": "$.request_method",
+                    "http_request":{
+                        "http_method": "$.request_method",
+                        "user_agent": "$.user_agent",
+                        "url": {
+                            "hostname": "$.domain_name",
+                            "url_string": "$.request_url",
+                            "scheme": "$.type"
+                        }
+                    },
+                    "http_response":{
+                        "code": "$.elb_status_code"
+                    },
+                    "connection_info": {
+                        "direction_id": 1,
+                        "protocol_ver_id": 4,
+                        "protocol_name": "tcp",
+                        "protocol_num": 6
+                    },
+                    "dst_endpoint": {
+                        "hostname": "$.target_group_arn",
+                        "ip": "$.target_ip",
+                        "port": "$.target_port",
+                        "type": "Virtual",
+                        "type_id": 6
+                    },
+                    "duration": "$.request_processing_time",
+                    "src_endpoint": {
+                        "ip": "$.client_ip",
+                        "port": "$.client_port"
+                    },
+                    "time": "$.time",
+                    "start_time": "$.request_creation_time",
+                    "traffic": {
+                        "bytes_in": "$.received_bytes",
+                        "bytes_out": "$.sent_bytes"
+                    },
+                    "tls": {
+                        "certificate": "$.chosen_cert_arn",
+                        "cipher": "$.ssl_cipher",
+                        "sni": "$.domain_name",
+                        "version": "$.ssl_protocol"
+                    },
+                    "unmapped": {
+                        "target_processing_time": "$.target_processing_time",
+                        "response_processing_time": "$.response_processing_time",
+                        "target_status_code": "$.target_status_code",
+                        "matched_rule_priority": "$.matched_rule_priority",
+                        "actions_executed": "$.actions_executed",
+                        "redirect_url": "$.redirect_url",
+                        "error_reason": "$.error_reason",
+                        "target_ip_list": "$.target_ip_list",
+                        "target_port_list": "$.target_port_list",
+                        "target_status_code_list": "$.target_status_code_list",
+                        "classification": "$.classification",
+                        "classification_reason": "$.classification_reason",
+                        "trace_id": "$.trace_id",
+                        "conn_trace_id": "$.conn_trace_id",
+                        "request_protocol": "$.request_protocol"
+                    }   
+                }
+            }
+        }
+    }
+}
