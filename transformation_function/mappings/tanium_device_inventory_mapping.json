@@ -1,0 +1,214 @@
+{
+    "custom_source_events": {
+        "source_name": "tanium-device-inventory",
+        "matched_field": "$.tanium_report",
+        "timestamp": {
+            "field": "$.timestamp",
+            "format": "%Y-%m-%dT%H:%M:%S%z"
+        },
+        "ocsf_mapping": {
+            "Tanium Platform Inventory": {
+                "schema": "device_inventory_info",
+                "schema_mapping": {
+                    "metadata": {
+                        "profiles": "host",
+                        "version": "v1.1.0",
+                        "product": {
+                            "name": "Tanium",
+                            "vendor_name": "Tanium Inc.",
+                            "feature": {
+                                "name": "Platform Inventory"
+                            },
+                            "uid": "$.tanium_report"
+                        }
+                    },
+                    "severity": "Informational",
+                    "severity_id": 1,
+                    "category_uid": 5,
+                    "category_name": "Discovery",
+                    "class_uid": 5001,
+                    "class_name": "Device Inventory Info",
+                    "type_uid": 500101,
+                    "activity_id": 1,
+                    "activity_name": "Collect",
+                    "time": "$.timestamp",
+                    "device": {
+                        "name": "$.computer_name",
+                        "hostname": "$.computer_name",
+                        "uid": "$.computer_id",
+                        "type": "$.device_type_mapped",
+                        "type_id": "$.device_type_id",
+                        "os": {
+                            "name": "$.os_name",
+                            "version": "$.os_version",
+                            "type": "$.os_type",
+                            "type_id": "$.os_type_id"
+                        },
+                        "network_interfaces": "$.network_interfaces",
+                        "hw_info": {
+                            "serial_number": "$.computer_serial_number",
+                            "manufacturer": "$.manufacturer"
+                        },
+                        "domain": "$.domain_name",
+                        "groups": {
+                            "enum": {
+                                "evaluate": "$.tags_array",
+                                "values": "$.tags_array",
+                                "other": []
+                            }
+                        }
+                    },
+                    "user": {
+                        "name": "$.username",
+                        "domain": "$.user_domain"
+                    },
+                    "risk_score": "$.risk_score_numeric",
+                    "risk_level": {
+                        "enum": {
+                            "evaluate": "$.risk_score_numeric",
+                            "values": {
+                                "0-100": "Low",
+                                "101-200": "Medium", 
+                                "201-300": "High",
+                                "301-1000": "Critical"
+                            },
+                            "other": "Unknown"
+                        }
+                    },
+                    "risk_level_id": {
+                        "enum": {
+                            "evaluate": "$.risk_score_numeric",
+                            "values": {
+                                "0-100": 1,
+                                "101-200": 2,
+                                "201-300": 3,
+                                "301-1000": 4
+                            },
+                            "other": 0
+                        }
+                    },
+                    "enrichments": [
+                        {
+                            "name": "Tanium Device Data",
+                            "type": "device_inventory",
+                            "data": {
+                                "tanium_computer_id": "$.computer_id",
+                                "tanium_id": "$.id",
+                                "tanium_report_type": "$.tanium_report",
+                                "custom_tags": "$.custom_tags",
+                                "chassis_type": "$.chassis_type"
+                            }
+                        }
+                    ],
+                    "unmapped": {
+                        "original_mac_address": "$.mac_address",
+                        "original_ip_address": "$.ip_address",
+                        "original_operating_system": "$.operating_system",
+                        "original_last_logged_in_user": "$.last_logged_in_user"
+                    }
+                }
+            },
+            "Tanium Core Inventory": {
+                "schema": "device_inventory_info",
+                "schema_mapping": {
+                    "metadata": {
+                        "profiles": "host",
+                        "version": "v1.1.0",
+                        "product": {
+                            "name": "Tanium",
+                            "vendor_name": "Tanium Inc.",
+                            "feature": {
+                                "name": "Core Inventory"
+                            },
+                            "uid": "$.tanium_report"
+                        }
+                    },
+                    "severity": "Informational",
+                    "severity_id": 1,
+                    "category_uid": 5,
+                    "category_name": "Discovery",
+                    "class_uid": 5001,
+                    "class_name": "Device Inventory Info",
+                    "type_uid": 500101,
+                    "activity_id": 1,
+                    "activity_name": "Collect",
+                    "time": "$.timestamp",
+                    "device": {
+                        "name": "$.computer_name",
+                        "hostname": "$.computer_name",
+                        "uid": "$.computer_id",
+                        "type": "$.device_type_mapped",
+                        "type_id": "$.device_type_id",
+                        "os": {
+                            "name": "$.os_name",
+                            "version": "$.os_version",
+                            "type": "$.os_type",
+                            "type_id": "$.os_type_id"
+                        },
+                        "network_interfaces": "$.network_interfaces",
+                        "hw_info": {
+                            "serial_number": "$.computer_serial_number",
+                            "manufacturer": "$.manufacturer"
+                        },
+                        "domain": "$.domain_name",
+                        "groups": {
+                            "enum": {
+                                "evaluate": "$.tags_array",
+                                "values": "$.tags_array",
+                                "other": []
+                            }
+                        }
+                    },
+                    "user": {
+                        "name": "$.username",
+                        "domain": "$.user_domain"
+                    },
+                    "risk_score": "$.risk_score_numeric",
+                    "risk_level": {
+                        "enum": {
+                            "evaluate": "$.risk_score_numeric",
+                            "values": {
+                                "0-100": "Low",
+                                "101-200": "Medium",
+                                "201-300": "High", 
+                                "301-1000": "Critical"
+                            },
+                            "other": "Unknown"
+                        }
+                    },
+                    "risk_level_id": {
+                        "enum": {
+                            "evaluate": "$.risk_score_numeric",
+                            "values": {
+                                "0-100": 1,
+                                "101-200": 2,
+                                "201-300": 3,
+                                "301-1000": 4
+                            },
+                            "other": 0
+                        }
+                    },
+                    "enrichments": [
+                        {
+                            "name": "Tanium Device Data",
+                            "type": "device_inventory",
+                            "data": {
+                                "tanium_computer_id": "$.computer_id",
+                                "tanium_id": "$.id",
+                                "tanium_report_type": "$.tanium_report",
+                                "custom_tags": "$.custom_tags",
+                                "chassis_type": "$.chassis_type"
+                            }
+                        }
+                    ],
+                    "unmapped": {
+                        "original_mac_address": "$.mac_address",
+                        "original_ip_address": "$.ip_address",
+                        "original_operating_system": "$.operating_system",
+                        "original_last_logged_in_user": "$.last_logged_in_user"
+                    }
+                }
+            }
+        }
+    }
+}
