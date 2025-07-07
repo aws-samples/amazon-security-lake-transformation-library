@@ -124,6 +124,21 @@ def perform_transform(event_mapping, event):
                             new_record[key] = event_mapping[key]['enum']['other']
                 else:
                     new_record[key] = perform_transform(event_mapping[key], event)
+            # if we have a list as the value, we need to process each item in the list
+            elif type(event_mapping[key]) is list:
+                new_record[key] = []
+                for item in event_mapping[key]:
+                    if type(item) is dict:
+                        # Recursively transform each dictionary item in the list
+                        transformed_item = perform_transform(item, event)
+                        new_record[key].append(transformed_item)
+                    elif isinstance(item, str) and item.startswith('$.'):
+                        # Handle dot notation references in list items
+                        locator_value = get_dot_locator_value(item, event)
+                        new_record[key].append(locator_value if locator_value is not None else None)
+                    else:
+                        # Keep the item as-is if it's not a dict or dot notation
+                        new_record[key].append(item)
             else: # we have reached a leaf node
                 # get the field if dot locator
                 if isinstance(event_mapping[key], str) and (event_mapping[key].startswith('$.')):

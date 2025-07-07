@@ -6,21 +6,71 @@ with proper network interface array mapping.
 import logging
 import json
 import ipaddress
+import csv
+from io import StringIO
 from typing import Dict, List, Any, Optional
 
 logger = logging.getLogger()
 
 def preprocess_event(raw_log):
     """
-    Preprocess a raw Tanium log record (dict from CSV)
+    Preprocess a raw Tanium CSV log line
     
     Args:
-        raw_log (dict): Raw Tanium log entry from CSV
+        raw_log (str): Raw CSV line from Tanium
         
     Returns:
         dict: Structured data with network interfaces properly mapped
     """
-    return preprocess_tanium_device_record(raw_log)
+    # Parse CSV string to dictionary
+    record = parse_csv_line(raw_log.strip())
+    
+    # Skip header lines or invalid records
+    if record is None:
+        return None
+    
+    # Process with existing logic
+    return preprocess_tanium_device_record(record)
+
+def parse_csv_line(csv_line: str) -> Optional[Dict[str, str]]:
+    """
+    Parse a single CSV line into a dictionary using the known field order
+    
+    Args:
+        csv_line (str): Raw CSV line
+        
+    Returns:
+        Dict[str, str]: Parsed CSV fields as dictionary, or None if header/invalid
+    """
+    # Skip empty lines
+    if not csv_line.strip():
+        return None
+    
+    # Skip header line
+    if csv_line.startswith('computer_name,'):
+        logger.debug("Skipping CSV header line")
+        return None
+    
+    # Define the expected field order based on the CSV structure
+    fieldnames = [
+        'computer_name', 'mac_address', 'ip_address', 'chassis_type',
+        'operating_system', 'risk_score', 'domain_name', 'last_logged_in_user',
+        'manufacturer', 'computer_id', 'id', 'custom_tags',
+        'computer_serial_number', 'tanium_report', 'timestamp'
+    ]
+    
+    try:
+        # Use Python's CSV parser to handle quoted fields properly
+        reader = csv.DictReader(StringIO(csv_line), fieldnames=fieldnames)
+        record = next(reader)
+        
+        logger.debug(f"Parsed CSV record for computer: {record.get('computer_name', 'unknown')}")
+        return record
+        
+    except Exception as e:
+        logger.error(f"Error parsing CSV line: {e}")
+        logger.debug(f"Problematic CSV line: {csv_line}")
+        return None
 
 def preprocess_tanium_device_record(record):
     """
