@@ -128,7 +128,9 @@ def preprocess_tanium_device_record(record):
 def build_network_interfaces_array(mac_string: str, ip_string: str) -> List[Dict[str, Any]]:
     """
     Build network interfaces array from comma-separated MAC and IP strings.
-    Assumes the order of MACs and IPs correspond to each other.
+    Customer requirements:
+    - If 1 MAC: map that MAC to ALL IP addresses
+    - If multiple MACs: only map FIRST MAC to FIRST IP address
     
     Args:
         mac_string (str): Comma-separated MAC addresses
@@ -153,22 +155,14 @@ def build_network_interfaces_array(mac_string: str, ip_string: str) -> List[Dict
             if is_valid_ip(ip):
                 ips.append(ip)
     
-    # Create interfaces based on the maximum count, maintaining order
-    max_count = max(len(macs), len(ips))
-    
-    for i in range(max_count):
-        interface = {}
-        
-        # Add MAC address if available
-        if i < len(macs):
-            interface['mac'] = macs[i]
-        
-        # Add IP address if available
-        if i < len(ips):
-            ip = ips[i]
-            interface['ip'] = ip
+    # Apply customer-specific mapping logic
+    if len(macs) == 1:
+        # Single MAC: map to ALL IP addresses
+        single_mac = macs[0]
+        for ip in ips:
+            interface = {'mac': single_mac, 'ip': ip}
             
-            # Determine IP type and version
+            # Add IP type information
             try:
                 ip_obj = ipaddress.ip_address(ip)
                 if ip_obj.version == 4:
@@ -178,14 +172,61 @@ def build_network_interfaces_array(mac_string: str, ip_string: str) -> List[Dict
                     interface['type'] = 'IPv6'
                     interface['type_id'] = 2
                 
-                # Check if it's a private/internal IP
+                # Add subnet prefix for private IPs
                 if ip_obj.is_private:
                     interface['subnet_prefix'] = get_subnet_prefix(ip, ip_obj.version)
             except ValueError:
                 logger.warning(f"Invalid IP address format: {ip}")
-        
-        # Only add interface if it has at least MAC or IP
-        if interface:
+            
+            interfaces.append(interface)
+            
+    elif len(macs) > 1:
+        # Multiple MACs: only map FIRST MAC to FIRST IP
+        if len(ips) > 0:
+            interface = {'mac': macs[0], 'ip': ips[0]}
+            
+            # Add IP type information
+            try:
+                ip_obj = ipaddress.ip_address(ips[0])
+                if ip_obj.version == 4:
+                    interface['type'] = 'IPv4'
+                    interface['type_id'] = 1
+                else:
+                    interface['type'] = 'IPv6'
+                    interface['type_id'] = 2
+                
+                # Add subnet prefix for private IPs
+                if ip_obj.is_private:
+                    interface['subnet_prefix'] = get_subnet_prefix(ips[0], ip_obj.version)
+            except ValueError:
+                logger.warning(f"Invalid IP address format: {ips[0]}")
+            
+            interfaces.append(interface)
+        else:
+            # No IPs available, just add MAC
+            interfaces.append({'mac': macs[0]})
+    
+    else:
+        # No MACs, but might have IPs - add first IP only
+        if len(ips) > 0:
+            interface = {'ip': ips[0]}
+            
+            # Add IP type information
+            try:
+                ip_obj = ipaddress.ip_address(ips[0])
+                if ip_obj.version == 4:
+                    interface['type'] = 'IPv4'
+                    interface['type_id'] = 1
+                else:
+                    interface['type'] = 'IPv6'
+                    interface['type_id'] = 2
+                
+                # Add subnet prefix for private IPs
+                if ip_obj.is_private:
+                    interface['subnet_prefix'] = get_subnet_prefix(ips[0], ip_obj.version)
+            except ValueError:
+                logger.warning(f"Invalid IP address format: {ips[0]}")
+            
             interfaces.append(interface)
     
     return interfaces

@@ -56,55 +56,68 @@
                                 "values": "$.tags_array",
                                 "other": []
                             }
+                        },
+                        "risk_score": "$.risk_score_numeric",
+                        "risk_level": {
+                            "enum": {
+                                "evaluate": "$.risk_score_numeric",
+                                "values": {
+                                    "0-100": "Low",
+                                    "101-200": "Medium", 
+                                    "201-300": "High",
+                                    "301-1000": "Critical"
+                                },
+                                "other": "Unknown"
+                            }
+                        },
+                        "risk_level_id": {
+                            "enum": {
+                                "evaluate": "$.risk_score_numeric",
+                                "values": {
+                                    "0-100": 1,
+                                    "101-200": 2,
+                                    "201-300": 3,
+                                    "301-1000": 4
+                                },
+                                "other": 0
+                            }
                         }
                     },
                     "user": {
                         "name": "$.username",
                         "domain": "$.user_domain"
                     },
-                    "risk_score": "$.risk_score_numeric",
-                    "risk_level": {
-                        "enum": {
-                            "evaluate": "$.risk_score_numeric",
-                            "values": {
-                                "0-100": "Low",
-                                "101-200": "Medium", 
-                                "201-300": "High",
-                                "301-1000": "Critical"
-                            },
-                            "other": "Unknown"
-                        }
-                    },
-                    "risk_level_id": {
-                        "enum": {
-                            "evaluate": "$.risk_score_numeric",
-                            "values": {
-                                "0-100": 1,
-                                "101-200": 2,
-                                "201-300": 3,
-                                "301-1000": 4
-                            },
-                            "other": 0
-                        }
-                    },
                     "enrichments": [
                         {
-                            "name": "Tanium Device Data",
+                            "name": "Tanium Asset Management",
                             "type": "device_inventory",
                             "data": {
                                 "tanium_computer_id": "$.computer_id",
-                                "tanium_id": "$.id",
-                                "tanium_report_type": "$.tanium_report",
-                                "custom_tags": "$.custom_tags",
-                                "chassis_type": "$.chassis_type"
+                                "tanium_endpoint_id": "$.id",
+                                "scan_report_type": "$.tanium_report",
+                                "hardware_classification": "$.chassis_type",
+                                "vulnerability_score": "$.risk_score_numeric",
+                                "last_scan_time": "$.timestamp"
+                            }
+                        },
+                        {
+                            "name": "Business Context",
+                            "type": "asset_classification", 
+                            "data": {
+                                "asset_tags": "$.tags_array",
+                                "custom_attributes": "$.custom_tags"
                             }
                         }
                     ],
                     "unmapped": {
-                        "original_mac_address": "$.mac_address",
-                        "original_ip_address": "$.ip_address",
-                        "original_operating_system": "$.operating_system",
-                        "original_last_logged_in_user": "$.last_logged_in_user"
+                        "source_data": {
+                            "csv_mac_addresses": "$.mac_address",
+                            "csv_ip_addresses": "$.ip_address",
+                            "full_os_string": "$.operating_system",
+                            "raw_user_string": "$.last_logged_in_user",
+                            "source_timestamp": "$.timestamp",
+                            "tanium_raw_record": "$.tanium_report"
+                        }
                     }
                 }
             },
@@ -157,55 +170,68 @@
                                 "values": "$.tags_array",
                                 "other": []
                             }
+                        },
+                        "risk_score": "$.risk_score_numeric",
+                        "risk_level": {
+                            "enum": {
+                                "evaluate": "$.risk_score_numeric",
+                                "values": {
+                                    "0-100": "Low",
+                                    "101-200": "Medium",
+                                    "201-300": "High", 
+                                    "301-1000": "Critical"
+                                },
+                                "other": "Unknown"
+                            }
+                        },
+                        "risk_level_id": {
+                            "enum": {
+                                "evaluate": "$.risk_score_numeric",
+                                "values": {
+                                    "0-100": 1,
+                                    "101-200": 2,
+                                    "201-300": 3,
+                                    "301-1000": 4
+                                },
+                                "other": 0
+                            }
                         }
                     },
                     "user": {
                         "name": "$.username",
                         "domain": "$.user_domain"
                     },
-                    "risk_score": "$.risk_score_numeric",
-                    "risk_level": {
-                        "enum": {
-                            "evaluate": "$.risk_score_numeric",
-                            "values": {
-                                "0-100": "Low",
-                                "101-200": "Medium",
-                                "201-300": "High", 
-                                "301-1000": "Critical"
-                            },
-                            "other": "Unknown"
-                        }
-                    },
-                    "risk_level_id": {
-                        "enum": {
-                            "evaluate": "$.risk_score_numeric",
-                            "values": {
-                                "0-100": 1,
-                                "101-200": 2,
-                                "201-300": 3,
-                                "301-1000": 4
-                            },
-                            "other": 0
-                        }
-                    },
                     "enrichments": [
                         {
-                            "name": "Tanium Device Data",
+                            "name": "Tanium Asset Management",
                             "type": "device_inventory",
                             "data": {
                                 "tanium_computer_id": "$.computer_id",
-                                "tanium_id": "$.id",
-                                "tanium_report_type": "$.tanium_report",
-                                "custom_tags": "$.custom_tags",
-                                "chassis_type": "$.chassis_type"
+                                "tanium_endpoint_id": "$.id",
+                                "scan_report_type": "$.tanium_report",
+                                "hardware_classification": "$.chassis_type",
+                                "vulnerability_score": "$.risk_score_numeric",
+                                "last_scan_time": "$.timestamp"
+                            }
+                        },
+                        {
+                            "name": "Business Context",
+                            "type": "asset_classification",
+                            "data": {
+                                "asset_tags": "$.tags_array",
+                                "custom_attributes": "$.custom_tags"
                             }
                         }
                     ],
                     "unmapped": {
-                        "original_mac_address": "$.mac_address",
-                        "original_ip_address": "$.ip_address",
-                        "original_operating_system": "$.operating_system",
-                        "original_last_logged_in_user": "$.last_logged_in_user"
+                        "source_data": {
+                            "csv_mac_addresses": "$.mac_address",
+                            "csv_ip_addresses": "$.ip_address",
+                            "full_os_string": "$.operating_system",
+                            "raw_user_string": "$.last_logged_in_user",
+                            "source_timestamp": "$.timestamp",
+                            "tanium_raw_record": "$.tanium_report"
+                        }
                     }
                 }
             }
