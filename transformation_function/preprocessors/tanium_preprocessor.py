@@ -128,16 +128,15 @@ def preprocess_tanium_device_record(record):
 def build_network_interfaces_array(mac_string: str, ip_string: str) -> List[Dict[str, Any]]:
     """
     Build network interfaces array from comma-separated MAC and IP strings.
-    Customer requirements:
-    - If 1 MAC: map that MAC to ALL IP addresses
-    - If multiple MACs: only map FIRST MAC to FIRST IP address
+    Only maps first MAC with first IP, then creates individual entries for remaining MACs and IPs.
+    Example: 2 MACs + 3 IPs = 4 interfaces (MAC+IP, MAC, IP, IP)
     
     Args:
         mac_string (str): Comma-separated MAC addresses
         ip_string (str): Comma-separated IP addresses
         
     Returns:
-        List[Dict]: Array of network interface objects
+        List[Dict]: Array of OCSF network interface objects
     """
     interfaces = []
     
@@ -155,14 +154,40 @@ def build_network_interfaces_array(mac_string: str, ip_string: str) -> List[Dict
             if is_valid_ip(ip):
                 ips.append(ip)
     
-    # Apply customer-specific mapping logic
-    if len(macs) == 1:
-        # Single MAC: map to ALL IP addresses
-        single_mac = macs[0]
-        for ip in ips:
-            interface = {'mac': single_mac, 'ip': ip}
+    # Handle different scenarios
+    if len(macs) > 0 and len(ips) > 0:
+        # Both MACs and IPs available - create first interface with MAC+IP
+        interface = {'mac': macs[0], 'ip': ips[0]}
+        
+        # Add OCSF network interface type information for the IP
+        try:
+            ip_obj = ipaddress.ip_address(ips[0])
+            if ip_obj.version == 4:
+                interface['type'] = 'IPv4'
+                interface['type_id'] = 1
+            else:
+                interface['type'] = 'IPv6'
+                interface['type_id'] = 2
             
-            # Add IP type information
+            # Add subnet prefix for private IPs
+            if ip_obj.is_private:
+                interface['subnet_prefix'] = get_subnet_prefix(ips[0], ip_obj.version)
+                
+        except ValueError:
+            logger.warning(f"Invalid IP address format: {ips[0]}")
+        
+        interfaces.append(interface)
+        
+        # Add remaining MACs as individual interfaces (MAC only)
+        for i in range(1, len(macs)):
+            interfaces.append({'mac': macs[i]})
+        
+        # Add remaining IPs as individual interfaces (IP only)
+        for i in range(1, len(ips)):
+            ip = ips[i]
+            interface = {'ip': ip}
+            
+            # Add OCSF network interface type information
             try:
                 ip_obj = ipaddress.ip_address(ip)
                 if ip_obj.version == 4:
@@ -175,19 +200,25 @@ def build_network_interfaces_array(mac_string: str, ip_string: str) -> List[Dict
                 # Add subnet prefix for private IPs
                 if ip_obj.is_private:
                     interface['subnet_prefix'] = get_subnet_prefix(ip, ip_obj.version)
+                    
             except ValueError:
                 logger.warning(f"Invalid IP address format: {ip}")
             
             interfaces.append(interface)
             
-    elif len(macs) > 1:
-        # Multiple MACs: only map FIRST MAC to FIRST IP
-        if len(ips) > 0:
-            interface = {'mac': macs[0], 'ip': ips[0]}
+    elif len(macs) > 0 and len(ips) == 0:
+        # Only MACs, no IPs - create MAC-only interfaces
+        for mac in macs:
+            interfaces.append({'mac': mac})
             
-            # Add IP type information
+    elif len(macs) == 0 and len(ips) > 0:
+        # Only IPs, no MACs - create IP-only interfaces
+        for ip in ips:
+            interface = {'ip': ip}
+            
+            # Add OCSF network interface type information
             try:
-                ip_obj = ipaddress.ip_address(ips[0])
+                ip_obj = ipaddress.ip_address(ip)
                 if ip_obj.version == 4:
                     interface['type'] = 'IPv4'
                     interface['type_id'] = 1
@@ -197,35 +228,10 @@ def build_network_interfaces_array(mac_string: str, ip_string: str) -> List[Dict
                 
                 # Add subnet prefix for private IPs
                 if ip_obj.is_private:
-                    interface['subnet_prefix'] = get_subnet_prefix(ips[0], ip_obj.version)
+                    interface['subnet_prefix'] = get_subnet_prefix(ip, ip_obj.version)
+                    
             except ValueError:
-                logger.warning(f"Invalid IP address format: {ips[0]}")
-            
-            interfaces.append(interface)
-        else:
-            # No IPs available, just add MAC
-            interfaces.append({'mac': macs[0]})
-    
-    else:
-        # No MACs, but might have IPs - add first IP only
-        if len(ips) > 0:
-            interface = {'ip': ips[0]}
-            
-            # Add IP type information
-            try:
-                ip_obj = ipaddress.ip_address(ips[0])
-                if ip_obj.version == 4:
-                    interface['type'] = 'IPv4'
-                    interface['type_id'] = 1
-                else:
-                    interface['type'] = 'IPv6'
-                    interface['type_id'] = 2
-                
-                # Add subnet prefix for private IPs
-                if ip_obj.is_private:
-                    interface['subnet_prefix'] = get_subnet_prefix(ips[0], ip_obj.version)
-            except ValueError:
-                logger.warning(f"Invalid IP address format: {ips[0]}")
+                logger.warning(f"Invalid IP address format: {ip}")
             
             interfaces.append(interface)
     
