@@ -88,7 +88,7 @@ def preprocess_tanium_device_record(record):
     # Start with the original record
     processed_record = record.copy()
     
-    # Process network interfaces - split comma-separated values and create array
+    # Process network interfaces - split newline-separated values and create array
     network_interfaces = build_network_interfaces_array(
         record.get('mac_address', ''),
         record.get('ip_address', '')
@@ -127,31 +127,39 @@ def preprocess_tanium_device_record(record):
 
 def build_network_interfaces_array(mac_string: str, ip_string: str) -> List[Dict[str, Any]]:
     """
-    Build network interfaces array from comma-separated MAC and IP strings.
+    Build network interfaces array from newline-separated MAC and IP strings.
     Only maps first MAC with first IP, then creates individual entries for remaining MACs and IPs.
     Example: 2 MACs + 3 IPs = 4 interfaces (MAC+IP, MAC, IP, IP)
     
     Args:
-        mac_string (str): Comma-separated MAC addresses
-        ip_string (str): Comma-separated IP addresses
+        mac_string (str): Newline-separated MAC addresses
+        ip_string (str): Newline-separated IP addresses
         
     Returns:
         List[Dict]: Array of OCSF network interface objects
     """
     interfaces = []
     
-    # Split and clean MAC addresses
+    # Split and clean MAC addresses using newline delimiter
     macs = []
     if mac_string and mac_string.strip() != '-':
-        macs = [normalize_mac_address(mac.strip()) for mac in mac_string.split(',')]
-        macs = [mac for mac in macs if mac]  # Remove empty strings
+        # Split by newline and clean each MAC address
+        mac_lines = mac_string.split('\n')
+        for mac_line in mac_lines:
+            mac = mac_line.strip()
+            if mac:  # Skip empty lines
+                normalized_mac = normalize_mac_address(mac)
+                if normalized_mac:  # Only add valid MAC addresses
+                    macs.append(normalized_mac)
     
-    # Split and validate IP addresses
+    # Split and validate IP addresses using newline delimiter
     ips = []
     if ip_string and ip_string.strip() != '-':
-        for ip in ip_string.split(','):
-            ip = ip.strip()
-            if is_valid_ip(ip):
+        # Split by newline and validate each IP address
+        ip_lines = ip_string.split('\n')
+        for ip_line in ip_lines:
+            ip = ip_line.strip()
+            if ip and is_valid_ip(ip):  # Skip empty lines and validate IP
                 ips.append(ip)
     
     # Handle different scenarios
