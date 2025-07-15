@@ -40,6 +40,26 @@
         }
       },
       "mapping_file": "aws_nfw.json"
+    },
+    {
+      "name": "tanium-device-inventory",
+      "preprocessor_module": "tanium_preprocessor",
+      "input_paths": {
+        "s3": {
+          "enabled": true,
+          "source_buckets": [
+            {
+              "bucket_name": "tanium-device-inventory-logs",
+              "prefix": "device-inventory/*"
+            }
+          ]
+        },
+        "kinesis": {
+          "enabled": true,
+          "metadata_field": "source"
+        }
+      },
+      "mapping_file": "tanium_device_inventory_mapping.json"
     }
   ]
 }
