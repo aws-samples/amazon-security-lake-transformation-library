@@ -87,6 +87,30 @@ The transformation process follows these steps:
 > **_NOTE:_** If you want to add more sources other than the supported after you have deployed the solution, please ensure that you update the mapping in the [mappings](./transformation_function/mappings/) and [sources_config.json](./transformation_function/sources_config.json) folder under [transformation_function](./transformation_function/) folder.
 <img src="./images/custom_sources_config.png" alt="Custom sources config" style="border: 3px solid black;">
 
+**File Type Configuration**
+
+The solution supports different file formats for S3 sources. You can specify the `filetype` parameter in your `sources_config.json` under `input_paths.s3`:
+
+- `gzip` (default) - Gzip-compressed files
+- `plaintext` - Uncompressed text files
+- `parquet` - Apache Parquet files
+
+Example:
+```json
+{
+  "name": "aws-alb",
+  "input_paths": {
+    "s3": {
+      "enabled": true,
+      "filetype": "plaintext",
+      "source_buckets": [...]
+    }
+  }
+}
+```
+
+If not specified, the solution defaults to `gzip`.
+
 ## Deployment Steps
 
 #### STEP 1: Add custom source in Security Lake

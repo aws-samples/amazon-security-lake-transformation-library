@@ -176,8 +176,7 @@ class OcsfTransformationStack(Stack):
                 # Add S3 notification for SQS
                 staging_log_bucket.add_event_notification(
                     s3.EventType.OBJECT_CREATED_PUT,
-                    s3n.SqsDestination(sqs_queue),
-                    s3.NotificationKeyFilter(suffix=".log.gz")
+                    s3n.SqsDestination(sqs_queue)
                 )
             else:
                 # Use existing bucket
@@ -189,8 +188,7 @@ class OcsfTransformationStack(Stack):
                     # Add S3 notification for SQS
                     log_bucket.add_event_notification(
                         s3.EventType.OBJECT_CREATED_PUT,
-                        s3n.SqsDestination(sqs_queue),
-                        s3.NotificationKeyFilter(suffix=".log.gz")
+                        s3n.SqsDestination(sqs_queue)
                     )
 
             # Add S3-specific policies to the Lambda role

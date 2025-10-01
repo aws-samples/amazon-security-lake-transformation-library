@@ -8,7 +8,8 @@
           "enabled": true,
           "metadata_field": "source"
         }
-      }
+      },
+      "mapping_file": "windows_sysmon.json"
     },
     {
       "name": "aws-alb",
@@ -16,6 +17,7 @@
       "input_paths": {
         "s3": {
           "enabled": true,
+          "filetype": "plaintext",
           "source_buckets": [
             {
               "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 
@@ -31,6 +33,7 @@
       "input_paths": {
         "s3": {
           "enabled": true,
+          "filetype": "gzip",
           "source_buckets": [
             {
               "bucket_name": "ocsf-transform-infrastructure-s3-staging-log-bucket", 

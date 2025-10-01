@@ -277,8 +277,18 @@ def process_s3_event(record):
     if source_name is None:
         logger.error(f"Cannot determine source for S3 object: {bucket_name}/{decoded_key}")
         return [], []
+    
+    # Get source config and extract filetype from S3 configuration (default to 'gzip' if not specified)
+    source_config = next((s for s in sources_config['sources'] if s['name'] == source_name), None)
+    filetype = source_config.get('input_paths', {}).get('s3', {}).get('filetype', 'gzip')
+    
+    # Validate filetype
+    allowed_filetypes = ['gzip', 'plaintext', 'parquet']
+    if filetype not in allowed_filetypes:
+        logger.warning(f"Invalid filetype '{filetype}' for source {source_name}. Defaulting to 'gzip'. Allowed values: {allowed_filetypes}")
+        filetype = 'gzip'
         
-    logger.info(f"Processing S3 object from source: {source_name}, key: {decoded_key}")
+    logger.info(f"Processing S3 object from source: {source_name}, key: {decoded_key}, filetype: {filetype}")
 
     s3_client = boto3.client('s3')
     response = s3_client.get_object(
@@ -286,14 +296,28 @@ def process_s3_event(record):
         Key=decoded_key
     )
 
-    log_file = gzip.GzipFile(
-        None,
-        'rb',
-        fileobj=BytesIO(response['Body'].read())
-    )
+    # Read file based on filetype
+    try:
+        lines = []
+        if filetype == 'gzip':
+            log_file = gzip.GzipFile(None, 'rb', fileobj=BytesIO(response['Body'].read()))
+            lines = [line.decode("utf-8").strip() for line in log_file]
+        elif filetype == 'plaintext':
+            content = response['Body'].read().decode('utf-8')
+            lines = [line.strip() for line in content.splitlines()]
+        elif filetype == 'parquet':
+            df = pd.read_parquet(BytesIO(response['Body'].read()))
+            lines = [json.dumps(row, default=str) for row in df.to_dict('records')]
+    except Exception as e:
+        logger.error(f"Error reading {filetype} file from s3://{bucket_name}/{decoded_key}: {str(e)}")
+        return [], []
 
-    for line in log_file:
-        raw_line = line.decode("utf-8")
+    # Process each line
+    for raw_line in lines:
+        # Skip empty lines
+        if not raw_line:
+            continue
+            
         logger.debug("Raw log: " + raw_line)
 
         try:
